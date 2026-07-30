@@ -1,51 +1,75 @@
-# vvoice README
+# Audio Transcription Extension
 
-This is the README for your extension "vvoice". After writing up a brief description, we recommend including the following sections.
+This is a VS Code extension that allows you to transcribe audio files using a Lemonade server with Whisper. Simply select an audio file and the extension will send it to your local Lemonade server for transcription.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
-
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+- Transcribe audio files (mp3, wav, m4a, flac, aac)
+- View transcriptions directly in VS Code
+- Integration with local Lemonade server running Whisper
+- Configurable Lemonade server URL
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+To use this extension, you need:
+1. A Lemonade server with Whisper installed and running locally
+2. Audio files to transcribe (mp3, wav, m4a, flac, aac)
+
+## Model Selection
+
+The extension uses the `whisper-1` model by default. If your Lemonade server supports other models, you can:
+
+1. Check available models on your Lemonade server by making a request to its `/v1/models` endpoint
+2. Configure the extension to use different models through the Lemonade server settings
+
+Example command to check available models:
+```
+curl http://localhost:13305/v1/models
+```
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+This extension contributes the following settings:
 
-For example:
+* `audio.lemonadeServerUrl`: URL of your Lemonade server with Whisper (default: http://localhost:8000)
+
+## Extension Settings
 
 This extension contributes the following settings:
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+* `audio.lemonadeServerUrl`: URL of your Lemonade server with Whisper (default: http://localhost:8000)
+
+## How to Use
+
+1. Start your Lemonade server with Whisper
+2. Open VS Code and press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac) to open the command palette
+3. Type "Transcribe Audio File" and select it
+4. Choose an audio file from your system
+5. The transcription will appear in a new editor window
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+- The extension assumes a local Lemonade server is running and accessible
+- Network issues may prevent successful transcription
+- Large audio files may take longer to process
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
-
 ### 1.0.0
 
-Initial release of ...
+Initial release of audio transcription extension
 
 ### 1.0.1
 
-Fixed issue #.
+Added support for multiple audio formats
 
 ### 1.1.0
 
-Added features X, Y, and Z.
+Implemented Lemonade server integration with Whisper
+
+### 1.1.1
+
+Improved error handling and user feedback
 
 ---
 
