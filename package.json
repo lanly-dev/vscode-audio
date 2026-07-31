@@ -1,6 +1,6 @@
 {
-  "name": "vs-audio",
-  "displayName": "Audio Transcription",
+  "name": "audio-lab",
+  "displayName": "Audio Lab",
   "description": "Transcribe audio files using Lemonade server with Whisper",
   "version": "1.1.1",
   "engines": {
@@ -17,62 +17,57 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "audio-activity-bar",
-          "title": "Audio",
+          "id": "audio-lab-activity-bar",
+          "title": "audio-lab",
           "icon": "$(mic)"
         }
       ]
     },
     "views": {
-      "audio-activity-bar": [
+      "audio-lab-activity-bar": [
         {
           "id": "lemonadeStatus",
           "name": "Lemonade Server Status",
           "icon": "$(server)"
-        },
-        {
-          "id": "audioFiles",
-          "name": "Audio Files",
-          "icon": "$(file)"
         }
       ]
     },
     "commands": [
       {
-        "command": "audio.changeServerUrl",
+        "command": "audio-lab.changeServerUrl",
         "title": "Change Lemonade Server URL",
         "icon": "$(edit)"
       },
       {
-        "command": "audio.transcribeAudio",
-        "title": "Transcribe Audio File"
+        "command": "audio-lab.transcribeAudio",
+        "title": "Transcribe audio File"
       },
       {
-        "command": "audio.loadWhisperModel",
+        "command": "audio-lab.loadWhisperModel",
         "title": "Load Whisper Model"
       },
       {
-        "command": "audio.unloadWhisperModel",
+        "command": "audio-lab.unloadWhisperModel",
         "title": "Unload Whisper Model"
       },
       {
-        "command": "audio.pickTranscriptionModel",
+        "command": "audio-lab.pickTranscriptionModel",
         "title": "Select for Transcription"
       }
     ],
     "menus": {
       "view/item/context": [
         {
-          "command": "audio.changeServerUrl",
+          "command": "audio-lab.changeServerUrl",
           "when": "view == lemonadeStatus && viewItem == LEMONADE_SERVER_URL",
           "group": "inline"
         }
       ]
     },
     "configuration": {
-      "title": "Audio Transcription",
+      "title": "Audio Lab",
       "properties": {
-        "audio.lemonadeServerUrl": {
+        "audio-lab.lemonadeServerUrl": {
           "type": "string",
           "default": "http://localhost:13305",
           "description": "Lemonade server URL"

@@ -10,9 +10,9 @@ import { loadModel, transcribeAudio } from './Server'
 export async function activate(context: vscode.ExtensionContext) {
   const rc = vscode.commands.registerCommand
   const lemonadeProvider = await createTreeViews()
-  const d1 = rc('audio.transcribeAudio', () => transcribeAudio(context))
-  const d2 = rc('audio.changeServerUrl', () => changeServerUrl(lemonadeProvider))
-  const d3 = rc('audio.loadWhisperModel', async (modelId: string) => {
+  const d1 = rc('audio-lab.transcribeAudio', () => transcribeAudio(context))
+  const d2 = rc('audio-lab.changeServerUrl', () => changeServerUrl(lemonadeProvider))
+  const d3 = rc('audio-lab.loadWhisperModel', async (modelId: string) => {
     if (!modelId) return
     try {
       await loadModel(modelId)
@@ -36,7 +36,7 @@ async function createTreeViews() {
 }
 
 //   // Register command to pick transcription model from available models
-//   const pickModelDisposable = vscode.commands.registerCommand('audio.pickTranscriptionModel', async (modelId?: string) => {
+//   const pickModelDisposable = vscode.commands.registerCommand('audio-lab.pickTranscriptionModel', async (modelId?: string) => {
 //     // If no modelId provided, show model picker
 //     if (!modelId) {
 //       if (availableModels.length === 0) {
@@ -51,7 +51,7 @@ async function createTreeViews() {
 //       // Get whisper models for selection
 //       const whisperModels = availableModels.filter((m: any) => {
 //         const id = (m.id || m.name || '').toLowerCase()
-//         return id.includes('whisper') || id.includes('transcri') || id.includes('audio')
+//         return id.includes('whisper') || id.includes('transcri') || id.includes('audio-lab')
 //       })
 
 //       if (whisperModels.length === 0) {
@@ -98,7 +98,7 @@ async function createTreeViews() {
 
 
 //   // Register command to start Lemonade server
-//   const startServerDisposable = vscode.commands.registerCommand('audio.startLemonadeServer', async (serverUrl?: string) => {
+//   const startServerDisposable = vscode.commands.registerCommand('audio-lab.startLemonadeServer', async (serverUrl?: string) => {
 //     const targetUrl = serverUrl || currentServerUrl
 
 //     try {
@@ -113,7 +113,7 @@ async function createTreeViews() {
 //         await lemonadeProvider.refreshStatus()
 //       } else {
 //         // Alternative: Try to start via system command if configured
-//         const config = vscode.workspace.getConfiguration('audio')
+//         const config = vscode.workspace.getConfiguration('audio-lab')
 //         const serverPath = config.get<string>('serverPath', '')
 
 //         if (serverPath) {
@@ -126,7 +126,7 @@ async function createTreeViews() {
 //             await lemonadeProvider.refreshStatus()
 //           }, 3000)
 //         } else {
-//           vscode.window.showWarningMessage('No server path configured. Please set "audio.serverPath" in settings.')
+//           vscode.window.showWarningMessage('No server path configured. Please set "audio-lab.serverPath" in settings.')
 //         }
 //       }
 //     } catch (error) {
@@ -135,14 +135,14 @@ async function createTreeViews() {
 //   })
 
 //   // Register command to refresh Lemonade status
-//   const refreshDisposable = vscode.commands.registerCommand('audio.refreshLemonadeStatus', async () => {
+//   const refreshDisposable = vscode.commands.registerCommand('audio-lab.refreshLemonadeStatus', async () => {
 //     await lemonadeProvider.refreshStatus()
 //     vscode.window.showInformationMessage('Lemonade status refreshed')
 //   })
 
 
 //   // Register command to unload whisper model
-//   const unloadWhisperDisposable = vscode.commands.registerCommand('audio.unloadWhisperModel', async (modelId?: string) => {
+//   const unloadWhisperDisposable = vscode.commands.registerCommand('audio-lab.unloadWhisperModel', async (modelId?: string) => {
 //     if (!modelId || loadedWhisperModel !== modelId) {
 //       // If no model or not the loaded one, get from state
 //       modelId = loadedWhisperModel || undefined
@@ -162,8 +162,8 @@ async function createTreeViews() {
 //     }
 //   })
 
-//   // Register context menu for files in explorer - detect audio files
-//   const audioFileContextDisposable = vscode.commands.registerCommand('audio.setContextForAudioFiles', async (node: any) => {
+//   // Register context menu for files in explorer - detect audio-lab files
+//   const audio-labFileContextDisposable = vscode.commands.registerCommand('audio-lab.setContextForaudio-labFiles', async (node: any) => {
 //     let uri: vscode.Uri
 
 //     if (node && node.uri) {
@@ -174,19 +174,19 @@ async function createTreeViews() {
 //       return
 //     }
 
-//     const audioExtensions = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma', 'webm']
+//     const audio-labExtensions = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma', 'webm']
 //     const ext = uri.fsPath.split('.').pop()?.toLowerCase()
 
-//     if (audioExtensions.includes(ext || '')) {
+//     if (audio-labExtensions.includes(ext || '')) {
 //       await context.workspaceState.update('lastSelectedFile', uri)
 //       // Show status bar item to indicate file is selected for transcription
-//       vscode.window.showInformationMessage(`Audio file selected for transcription: ${path.basename(uri.fsPath)}`)
+//       vscode.window.showInformationMessage(`audio-lab file selected for transcription: ${path.basename(uri.fsPath)}`)
 //     }
 //   })
 
 //   // Listen for configuration changes to update server URL
 //   const configChangeDisposable = vscode.workspace.onDidChangeConfiguration(async (event) => {
-//     if (event.affectsConfiguration('audio.lemonadeServerUrl')) {
+//     if (event.affectsConfiguration('audio-lab.lemonadeServerUrl')) {
 //       await lemonadeProvider.refreshStatus()
 //     }
 //   })
@@ -200,7 +200,7 @@ async function createTreeViews() {
 //     refreshDisposable,
 //     loadWhisperDisposable,
 //     unloadWhisperDisposable,
-//     audioFileContextDisposable,
+//     audio-labFileContextDisposable,
 //     configChangeDisposable
 //   )
 
@@ -221,5 +221,5 @@ async function createTreeViews() {
 // // This method is called when your extension is deactivated
 // export function deactivate() {
 //   // Cleanup if needed
-//   console.log('Audio extension deactivated')
+//   console.log('audio-lab extension deactivated')
 // }

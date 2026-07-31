@@ -15,7 +15,7 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
   private getError: Error | null
 
   constructor() {
-    const config = vscode.workspace.getConfiguration('audio')
+    const config = vscode.workspace.getConfiguration('audio-lab')
     if (!config.get<string>('lemonadeServerUrl')) throw new Error('Lemonade server URL is not configured.')
 
     this.currentServerUrl = config.get<string>('lemonadeServerUrl')!
@@ -27,7 +27,7 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
   }
 
   async refreshStatus(): Promise<void> {
-    this.currentServerUrl = vscode.workspace.getConfiguration('audio').get<string>('lemonadeServerUrl')!
+    this.currentServerUrl = vscode.workspace.getConfiguration('audio-lab').get<string>('lemonadeServerUrl')!
     this.getError = null
     if (!isValidUrl(this.currentServerUrl)) {
       this.isServerRunning = null
@@ -128,7 +128,7 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
           loadedItem.tooltip = tooltip
           loadedItem.contextValue = 'whisper-loaded'
           loadedItem.command = {
-            command: 'audio.unloadWhisperModel',
+            command: 'audio-lab.unloadWhisperModel',
             title: 'Unload Model',
             arguments: [modelId]
           }
@@ -137,7 +137,7 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
           const pickBtn = new vscode.TreeItem('✓ Select', vscode.TreeItemCollapsibleState.None)
           pickBtn.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('#2ea200'))
           pickBtn.command = {
-            command: 'audio.pickTranscriptionModel',
+            command: 'audio-lab.pickTranscriptionModel',
             title: 'Select for Transcription',
             arguments: [modelId]
           }
@@ -155,7 +155,7 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
           availableItem.tooltip = tooltip
           availableItem.contextValue = 'whisper-available'
           availableItem.command = {
-            command: 'audio.loadWhisperModel',
+            command: 'audio-lab.loadWhisperModel',
             title: 'Load Model',
             arguments: [modelId]
           }
@@ -167,7 +167,7 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
           )
           pickBtn.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('#00f'))
           pickBtn.command = {
-            command: 'audio.pickTranscriptionModel',
+            command: 'audio-lab.pickTranscriptionModel',
             title: 'Select for Transcription',
             arguments: [modelId]
           }

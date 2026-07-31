@@ -1,4 +1,4 @@
-# Audio Transcription Extension
+# Audio Lab Extension
 
 This is a VS Code extension that allows you to transcribe audio files using a Lemonade server with Whisper. Simply select an audio file and the extension will send it to your local Lemonade server for transcription.
 
@@ -31,13 +31,13 @@ curl http://localhost:13305/v1/models
 
 This extension contributes the following settings:
 
-* `audio.lemonadeServerUrl`: URL of your Lemonade server with Whisper (default: http://localhost:8000)
+* `audio-lab.lemonadeServerUrl`: URL of your Lemonade server with Whisper (default: http://localhost:8000)
 
 ## Extension Settings
 
 This extension contributes the following settings:
 
-* `audio.lemonadeServerUrl`: URL of your Lemonade server with Whisper (default: http://localhost:8000)
+* `audio-lab.lemonadeServerUrl`: URL of your Lemonade server with Whisper (default: http://localhost:8000)
 
 ## How to Use
 

@@ -2,7 +2,7 @@ import * as vscode from 'vscode'
 import LemonadeTreeDataProvider from './Treeview'
 
 export async function changeServerUrl(lemonadeProvider: LemonadeTreeDataProvider) {
-  const currentUrl = vscode.workspace.getConfiguration('audio').get<string>('lemonadeServerUrl')
+  const currentUrl = vscode.workspace.getConfiguration('audio-lab').get<string>('lemonadeServerUrl')
   const url = await vscode.window.showInputBox({
     prompt: 'Enter Lemonade server URL (include port)',
     value: currentUrl,
@@ -19,7 +19,7 @@ export async function changeServerUrl(lemonadeProvider: LemonadeTreeDataProvider
   })
 
   if (!url) return
-  const config = vscode.workspace.getConfiguration('audio')
+  const config = vscode.workspace.getConfiguration('audio-lab')
   await config.update('lemonadeServerUrl', url)
   await lemonadeProvider.refreshStatus()
   vscode.window.showInformationMessage(`Server URL updated to: ${url}`)

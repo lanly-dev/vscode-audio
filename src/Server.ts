@@ -4,7 +4,7 @@ import fs from 'fs'
 
 // Function to get Lemonade server status and available models
 export async function getLemonadeStatus(): Promise<any> {
-  const serverUrl = vscode.workspace.getConfiguration('audio').get<string>('lemonadeServerUrl')
+  const serverUrl = vscode.workspace.getConfiguration('audio-lab').get<string>('lemonadeServerUrl')
   try {
     let models: any[] = []
     const modelsResponse = await fetch(`${serverUrl}/v1/models`)
@@ -26,7 +26,7 @@ export async function getLemonadeStatus(): Promise<any> {
 }
 
 export async function loadModel(modelId: string): Promise<void> {
-  const serverUrl = vscode.workspace.getConfiguration('audio').get<string>('lemonadeServerUrl')
+  const serverUrl = vscode.workspace.getConfiguration('audio-lab').get<string>('lemonadeServerUrl')
   try {
     const requestBody = { model_name: modelId }
     const response = await fetch(`${serverUrl}/api/v1/load`, {
