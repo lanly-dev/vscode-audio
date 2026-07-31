@@ -146,7 +146,7 @@ export async function transcribeAudio(context: vscode.ExtensionContext) {
 
   const fileName = path.basename(targetUri.fsPath)
   const serverUrl = 'http://localhost:13305'
-  const model = 'whisper-1'
+  const model = 'Whisper-Large-v3-Turbo'
 
 
   try {

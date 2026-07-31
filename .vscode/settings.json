@@ -9,6 +9,7 @@
     "dist": true // set this to false to include "dist" folder in search results
   },
   "cSpell.words": [
+    "efix",
     "flac",
     "Treeview"
   ]

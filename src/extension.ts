@@ -19,16 +19,12 @@ async function createTreeViews(context: vscode.ExtensionContext): Promise<{ lemo
   return { lemonadeProvider, lemonadeTreeView }
 }
 
-
-// This method is called when your extension is activated
 export async function activate(context: vscode.ExtensionContext) {
+  const rc = vscode.commands.registerCommand
+  await createTreeViews(context)
 
-  // Create tree views
-  const { lemonadeProvider, lemonadeTreeView } = await createTreeViews(context)
-
-  const transcribeDisposable = vscode.commands.registerCommand('audio.transcribeAudio', () => transcribeAudio(context))
-
-  context.subscriptions.push(transcribeDisposable)
+  const d1 = rc('audio.transcribeAudio', () => transcribeAudio(context))
+  context.subscriptions.push(d1)
 }
 
 //   // Register command to pick transcription model from available models
