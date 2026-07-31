@@ -5,74 +5,26 @@ import fs from 'fs'
 // Function to get Lemonade server status and available models
 export async function getLemonadeStatus(serverUrl: string): Promise<any> {
   try {
-    // Try the OpenAI-compatible models endpoint first - this is the standard API
     let models: any[] = []
-    let isRunning = false
+    const modelsResponse = await fetch(`${serverUrl}/v1/models`)
 
-    try {
-      const modelsResponse = await fetch(`${serverUrl}/v1/models`)
-      if (modelsResponse.ok) {
-        // Check if response is actually JSON, not HTML (which would indicate an error page)
-        const contentType = modelsResponse.headers.get('content-type') || ''
-        if (contentType.includes('application/json')) {
-          const modelsData = await modelsResponse.json()
-          models = modelsData.data || []
-          isRunning = true
-        } else {
-          // Response is not JSON (likely HTML error page), try /status endpoint
-          throw new Error('Non-JSON response from /v1/models')
-        }
-      }
-    } catch (e) {
-      // If /v1/models fails, try /status endpoint as fallback
-      console.error('/v1/models failed, trying /status endpoint...')
+    if (modelsResponse.ok) {
+      const modelsData = await modelsResponse.json()
+      models = modelsData.data || []
+    } else throw new Error(`Failed to fetch models: Server returned ${modelsResponse.status}`)
+
+    return {
+      status: 'RUNNING',
+      version: '',
+      models: models,
+      url: serverUrl,
+      rawData: { models: models },
+      isRunning: true
     }
-
-    // Try /status endpoint if /v1/models didn't work
-    if (!isRunning) {
-      try {
-        const statusResponse = await fetch(`${serverUrl}/status`)
-        if (statusResponse.ok) {
-          const contentType = statusResponse.headers.get('content-type') || ''
-          if (contentType.includes('application/json')) {
-            const statusData = await statusResponse.json()
-            isRunning = statusData.status !== 'stopped' &&
-              statusData.status !== 'offline' &&
-              statusData.status !== 'error'
-            return {
-              status: statusData.status || (isRunning ? 'running' : 'unknown'),
-              version: statusData.version || '',
-              models: models,
-              url: serverUrl,
-              rawData: statusData,
-              isRunning: isRunning
-            }
-          }
-        }
-      } catch (e) {
-        console.error('/status also failed')
-      }
-    }
-
-    // If we got models from /v1/models, the server is running
-    if (isRunning && models.length > 0) {
-      return {
-        status: 'running',
-        version: '',
-        models: models,
-        url: serverUrl,
-        rawData: { models: models },
-        isRunning: true
-      }
-    }
-
-    // If we couldn't connect to anything, throw an error
-    throw new Error('Cannot connect to server')
   } catch (error) {
     throw new Error(`Cannot connect to server: ${(error as Error).message}`)
   }
 }
-
 
 // Function to load a model on the Lemonade server
 export async function loadModel(serverUrl: string, modelId: string): Promise<void> {

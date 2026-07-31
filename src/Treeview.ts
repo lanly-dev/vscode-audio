@@ -3,16 +3,15 @@ import { getLemonadeStatus } from './Server'
 import { TreeItem } from 'vscode'
 import { isValidUrl, isWhisperModel, detectWhisperModel } from './Utils'
 
-export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
+export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<void> = new vscode.EventEmitter<void>()
   readonly onDidChangeTreeData: vscode.Event<void> = this._onDidChangeTreeData.event
 
   private currentServerUrl: string
-  private isServerRunning: boolean
+  private isServerRunning: boolean | null
   private serverStatusData: any = null
   private availableModels: any[] = []
   private loadedWhisperModel: string | null = null
-
 
   constructor() {
     const config = vscode.workspace.getConfiguration('audio')
@@ -30,38 +29,19 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
   }
 
   async refreshStatus(): Promise<void> {
-    try {
-      if (!isValidUrl(this.currentServerUrl)) {
-        this.serverStatusData = {
-          status: 'invalid' as const,
-          models: [],
-          url: this.currentServerUrl,
-          error: 'Invalid URL format'
-        }
-        this.isServerRunning = false
-        this._onDidChangeTreeData.fire(void 0)
-        return
-      }
-
-      this.serverStatusData = await getLemonadeStatus(this.currentServerUrl)
-      this.availableModels = this.serverStatusData.models || []
-      this.isServerRunning = this.serverStatusData.isRunning !== false  // Use the isRunning flag we added
-
-      // Detect whisper model for transcription
-      this.loadedWhisperModel = detectWhisperModel(this.availableModels)
-      this._onDidChangeTreeData.fire(void 0)
-    } catch (error) {
-      console.error('Error refreshing Lemonade status:', error)
-      this.serverStatusData = {
-        status: 'unreachable' as const,
-        models: [],
-        url: this.currentServerUrl,
-        error: (error as Error).message || 'Unknown error'
-      }
-      this.isServerRunning = false
+    if (!isValidUrl(this.currentServerUrl)) {
+      this.isServerRunning = null
       this.availableModels = []
-      this._onDidChangeTreeData.fire(void 0)
+      this._onDidChangeTreeData.fire()
+      return
     }
+    this.serverStatusData = await getLemonadeStatus(this.currentServerUrl)
+    this.availableModels = this.serverStatusData.models || []
+    this.isServerRunning = this.serverStatusData.isRunning !== false  // Use the isRunning flag we added
+
+    // Detect whisper model for transcription
+    this.loadedWhisperModel = detectWhisperModel(this.availableModels)
+    this._onDidChangeTreeData.fire(void 0)
   }
 
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem {

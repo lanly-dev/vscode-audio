@@ -2,7 +2,7 @@ import * as vscode from 'vscode'
 import * as fs from 'fs'
 import * as path from 'path'
 import { spawn } from 'child_process'
-import LemonadeStatusTreeDataProvider from './Treeview'
+import LemonadeTreeDataProvider from './Treeview'
 import { transcribeAudio } from './Server'
 
 
@@ -15,7 +15,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 // Register tree view for Lemonade status
 async function createTreeViews() {
-  const lemonadeProvider = new LemonadeStatusTreeDataProvider()
+  const lemonadeProvider = new LemonadeTreeDataProvider()
   vscode.window.createTreeView('lemonadeStatus', {
     treeDataProvider: lemonadeProvider,
     showCollapseAll: true
