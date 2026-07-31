@@ -39,11 +39,6 @@
         "icon": "$(edit)"
       },
       {
-        "command": "audio-lab.pickModel",
-        "title": "Select Model for Transcription",
-        "icon": "$(check)"
-      },
-      {
         "command": "audio-lab.transcribeAudio",
         "title": "Transcribe audio File"
       }
@@ -53,11 +48,6 @@
         {
           "command": "audio-lab.changeServerUrl",
           "when": "view == lemonadeStatus && viewItem == LEMONADE_SERVER_URL",
-          "group": "inline"
-        },
-        {
-          "command": "audio-lab.pickModel",
-          "when": "view == lemonadeStatus && viewItem == WHISPER_AVAILABLE",
           "group": "inline"
         }
       ]

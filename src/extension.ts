@@ -12,8 +12,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const lemonadeProvider = await createTreeViews()
   const d1 = rc('audio-lab.transcribeAudio', () => transcribeAudio(context))
   const d2 = rc('audio-lab.changeServerUrl', () => changeServerUrl(lemonadeProvider))
-  const d3 = rc('audio-lab.pickModel', async (treeItem: { label: string }) => {
-    const { label: modelId } = treeItem
+  const d3 = rc('audio-lab.pickModel', async (modelId: string) => {
     if (!modelId) {
       vscode.window.showInformationMessage('No model selected.')
       return

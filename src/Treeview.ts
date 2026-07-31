@@ -126,6 +126,11 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
           availableItem.iconPath = new vscode.ThemeIcon('circle-filled')
           availableItem.tooltip = modelId
           availableItem.contextValue = 'WHISPER_AVAILABLE'
+          availableItem.command = {
+            command: 'audio-lab.pickModel',
+            title: 'Select Model for Transcription',
+            arguments: [modelId]
+          }
           items.push(availableItem as TreeItem)
         }
       } else {
