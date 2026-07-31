@@ -36,7 +36,7 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
       return
     }
     try {
-      this.serverStatusData = await getLemonadeStatus(this.currentServerUrl)
+      this.serverStatusData = await getLemonadeStatus()
     } catch (error) {
       this.getError = error as Error
       this._onDidChangeTreeData.fire()
@@ -116,7 +116,7 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
 
       if (isWhisperModel(model)) {
         // Whisper model - show with start/stop and pick actions
-        let label = `Whisper: ${modelId}`
+        let label = modelId
         let tooltip = modelId
 
         if (this.loadedWhisperModel === modelId) {
@@ -134,10 +134,7 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
           }
 
           // Pick button as inline action
-          const pickBtn = new vscode.TreeItem(
-            '✓ Select',
-            vscode.TreeItemCollapsibleState.None
-          )
+          const pickBtn = new vscode.TreeItem('✓ Select', vscode.TreeItemCollapsibleState.None)
           pickBtn.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('#2ea200'))
           pickBtn.command = {
             command: 'audio.pickTranscriptionModel',

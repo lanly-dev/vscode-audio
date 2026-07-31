@@ -3,7 +3,8 @@ import path from 'path'
 import fs from 'fs'
 
 // Function to get Lemonade server status and available models
-export async function getLemonadeStatus(serverUrl: string): Promise<any> {
+export async function getLemonadeStatus(): Promise<any> {
+  const serverUrl = vscode.workspace.getConfiguration('audio').get<string>('lemonadeServerUrl')
   try {
     let models: any[] = []
     const modelsResponse = await fetch(`${serverUrl}/v1/models`)
@@ -24,18 +25,17 @@ export async function getLemonadeStatus(serverUrl: string): Promise<any> {
   }
 }
 
-// Function to load a model on the Lemonade server
-export async function loadModel(serverUrl: string, modelId: string): Promise<void> {
+export async function loadModel(modelId: string): Promise<void> {
+  const serverUrl = vscode.workspace.getConfiguration('audio').get<string>('lemonadeServerUrl')
   try {
-    const requestBody = [modelId]
-    const response = await fetch(`${serverUrl}/v1/models/load`, {
+    const requestBody = { model_name: modelId }
+    const response = await fetch(`${serverUrl}/api/v1/load`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestBody)
     })
 
     if (!response.ok) throw new Error(`Failed to load model: Server returned ${response.status}`)
-
     await response.json()
   } catch (error) {
     throw new Error(`Error loading model: ${(error as Error).message}`)

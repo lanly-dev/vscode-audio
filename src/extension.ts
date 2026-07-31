@@ -4,7 +4,7 @@ import * as path from 'path'
 import { spawn } from 'child_process'
 import LemonadeTreeDataProvider from './Treeview'
 import { changeServerUrl } from './Config'
-import { transcribeAudio } from './Server'
+import { loadModel, transcribeAudio } from './Server'
 
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -12,7 +12,16 @@ export async function activate(context: vscode.ExtensionContext) {
   const lemonadeProvider = await createTreeViews()
   const d1 = rc('audio.transcribeAudio', () => transcribeAudio(context))
   const d2 = rc('audio.changeServerUrl', () => changeServerUrl(lemonadeProvider))
-  context.subscriptions.push(d1, d2)
+  const d3 = rc('audio.loadWhisperModel', async (modelId: string) => {
+    if (!modelId) return
+    try {
+      await loadModel(modelId)
+      lemonadeProvider.refreshStatus()
+    } catch (error) {
+      vscode.window.showErrorMessage(`Failed to load model: ${(error as Error).message}`)
+    }
+  })
+  context.subscriptions.push(d1, d2, d3)
 }
 
 // Register tree view for Lemonade status
@@ -131,50 +140,6 @@ async function createTreeViews() {
 //     vscode.window.showInformationMessage('Lemonade status refreshed')
 //   })
 
-//   // Register command to load whisper model
-//   const loadWhisperDisposable = vscode.commands.registerCommand('audio.loadWhisperModel', async (modelId?: string) => {
-//     if (!modelId) {
-//       if (availableModels.length === 0) {
-//         await lemonadeProvider.refreshStatus()
-//       }
-
-//       const whisperModels = availableModels.filter((m: any) => {
-//         const id = (m.id || m.name || '').toLowerCase()
-//         return id.includes('whisper') || id.includes('transcri')
-//       })
-
-//       if (whisperModels.length === 0) {
-//         vscode.window.showWarningMessage('No whisper models available.')
-//         return
-//       }
-
-//       const quickPickItems = whisperModels.map((m: any) => ({
-//         label: m.id || m.name,
-//         description: m.id || m.name
-//       }))
-
-//       const selected = await vscode.window.showQuickPick(quickPickItems, {
-//         placeHolder: 'Select a model to load'
-//       })
-
-//       if (selected) {
-//         modelId = selected.description
-//       } else {
-//         return
-//       }
-//     }
-
-//     if (modelId) {
-//       try {
-//         await loadModel(currentServerUrl, modelId)
-//         loadedWhisperModel = modelId
-//         await lemonadeProvider.refreshStatus()
-//         vscode.window.showInformationMessage(`Model loaded: ${modelId}`)
-//       } catch (error) {
-//         vscode.window.showErrorMessage(`Failed to load model: ${(error as Error).message}`)
-//       }
-//     }
-//   })
 
 //   // Register command to unload whisper model
 //   const unloadWhisperDisposable = vscode.commands.registerCommand('audio.unloadWhisperModel', async (modelId?: string) => {
