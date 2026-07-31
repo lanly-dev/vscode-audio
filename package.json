@@ -73,7 +73,7 @@
         "audio.lemonadeServerUrl": {
           "type": "string",
           "default": "http://localhost:13305",
-          "description": "URL of your Lemonade server with Whisper"
+          "description": "Lemonade server URL"
         }
       }
     }

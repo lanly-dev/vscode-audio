@@ -155,26 +155,6 @@ async function createTreeViews() {
 //     }
 //   })
 
-//   // Register command to stop Lemonade server
-//   const stopServerDisposable = vscode.commands.registerCommand('audio.stopLemonadeServer', async (serverUrl?: string) => {
-//     const targetUrl = serverUrl || currentServerUrl
-
-//     try {
-//       vscode.window.showInformationMessage('Stopping Lemonade server...')
-
-//       const response = await fetch(`${targetUrl}/stop`, { method: 'POST' }).catch(() => null)
-
-//       if (response && response.ok) {
-//         vscode.window.showInformationMessage('Lemonade server stopped successfully')
-//         await lemonadeProvider.refreshStatus()
-//       } else {
-//         vscode.window.showWarningMessage('Could not stop server via API. You may need to stop it manually.')
-//       }
-//     } catch (error) {
-//       vscode.window.showErrorMessage(`Failed to stop server: ${(error as Error).message}`)
-//     }
-//   })
-
 //   // Register command to refresh Lemonade status
 //   const refreshDisposable = vscode.commands.registerCommand('audio.refreshLemonadeStatus', async () => {
 //     await lemonadeProvider.refreshStatus()

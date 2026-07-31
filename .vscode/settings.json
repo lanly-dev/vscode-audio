@@ -12,5 +12,6 @@
     "efix",
     "flac",
     "Treeview"
-  ]
+  ],
+  "editor.rulers": [120]
 }

@@ -14,9 +14,7 @@ export async function getLemonadeStatus(serverUrl: string): Promise<any> {
     } else throw new Error(`Failed to fetch models: Server returned ${modelsResponse.status}`)
 
     return {
-      status: 'RUNNING',
-      version: '',
-      models: models,
+      models,
       url: serverUrl,
       rawData: { models: models },
       isRunning: true
