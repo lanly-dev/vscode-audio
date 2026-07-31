@@ -3,14 +3,16 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { spawn } from 'child_process'
 import LemonadeTreeDataProvider from './Treeview'
+import { changeServerUrl } from './Config'
 import { transcribeAudio } from './Server'
 
 
 export async function activate(context: vscode.ExtensionContext) {
   const rc = vscode.commands.registerCommand
-  await createTreeViews()
+  const lemonadeProvider = await createTreeViews()
   const d1 = rc('audio.transcribeAudio', () => transcribeAudio(context))
-  context.subscriptions.push(d1)
+  const d2 = rc('audio.changeServerUrl', () => changeServerUrl(lemonadeProvider))
+  context.subscriptions.push(d1, d2)
 }
 
 // Register tree view for Lemonade status
@@ -21,8 +23,8 @@ async function createTreeViews() {
     showCollapseAll: true
   })
   await lemonadeProvider.refreshStatus()
+  return lemonadeProvider
 }
-
 
 //   // Register command to pick transcription model from available models
 //   const pickModelDisposable = vscode.commands.registerCommand('audio.pickTranscriptionModel', async (modelId?: string) => {
@@ -85,38 +87,6 @@ async function createTreeViews() {
 //     }
 //   })
 
-//   // Register command to edit server URL inline (via quick input)
-//   const editServerUrlDisposable = vscode.commands.registerCommand('audio.editServerUrlInline', async (currentUrl?: string) => {
-//     const url = await vscode.window.showInputBox({
-//       prompt: 'Enter Lemonade server URL (include port)',
-//       value: currentUrl || currentServerUrl,
-//       placeHolder: 'http://localhost:13305',
-//       validateInput: (value) => {
-//         if (!value) {
-//           return 'URL cannot be empty'
-//         }
-//         try {
-//           new URL(value)
-//           return null
-//         } catch {
-//           return 'Please enter a valid URL (include http:// or https://)'
-//         }
-//       }
-//     })
-
-//     if (url) {
-//       // Update configuration
-//       const config = vscode.workspace.getConfiguration('audio')
-//       await config.update('lemonadeServerUrl', url, vscode.ConfigurationTarget.Global)
-
-//       currentServerUrl = url
-
-//       // Refresh tree view
-//       await lemonadeProvider.refreshStatus()
-
-//       vscode.window.showInformationMessage(`Server URL updated to: ${url}`)
-//     }
-//   })
 
 //   // Register command to start Lemonade server
 //   const startServerDisposable = vscode.commands.registerCommand('audio.startLemonadeServer', async (serverUrl?: string) => {

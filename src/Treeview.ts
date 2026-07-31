@@ -9,9 +9,10 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
 
   private currentServerUrl: string
   private isServerRunning: boolean | null
-  private serverStatusData: any = null
+  private serverStatusData: any
   private availableModels: any[] = []
-  private loadedWhisperModel: string | null = null
+  private loadedWhisperModel: string | null
+  private getError: Error | null
 
   constructor() {
     const config = vscode.workspace.getConfiguration('audio')
@@ -19,31 +20,34 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
 
     this.currentServerUrl = config.get<string>('lemonadeServerUrl')!
     this.isServerRunning = false
-  }
-
-  updateServerUrl(): void {
-    const config = vscode.workspace.getConfiguration('audio')
-    if (!config.get<string>('lemonadeServerUr')) {
-      console.error('Lemonade server URL is not configured.')
-      return
-    }
-    this.currentServerUrl = config.get<string>('lemonadeServerUrl')!
+    this.serverStatusData = null
+    this.availableModels = []
+    this.loadedWhisperModel = null
+    this.getError = null
   }
 
   async refreshStatus(): Promise<void> {
+    this.currentServerUrl = vscode.workspace.getConfiguration('audio').get<string>('lemonadeServerUrl')!
+    this.getError = null
     if (!isValidUrl(this.currentServerUrl)) {
       this.isServerRunning = null
       this.availableModels = []
       this._onDidChangeTreeData.fire()
       return
     }
-    this.serverStatusData = await getLemonadeStatus(this.currentServerUrl)
+    try {
+      this.serverStatusData = await getLemonadeStatus(this.currentServerUrl)
+    } catch (error) {
+      this.getError = error as Error
+      this._onDidChangeTreeData.fire()
+      return
+    }
     this.availableModels = this.serverStatusData.models || []
     this.isServerRunning = this.serverStatusData.isRunning !== false  // Use the isRunning flag we added
 
     // Detect whisper model for transcription
     this.loadedWhisperModel = detectWhisperModel(this.availableModels)
-    this._onDidChangeTreeData.fire(void 0)
+    this._onDidChangeTreeData.fire()
   }
 
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
@@ -51,6 +55,11 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
   }
 
   async getChildren(element?: TreeItem): Promise<TreeItem[]> {
+    if (this.getError) {
+      const errorItem = new vscode.TreeItem(`Error: ${this.getError.message}`, vscode.TreeItemCollapsibleState.None)
+      errorItem.iconPath = new vscode.ThemeIcon('error', new vscode.ThemeColor('charts.red'))
+      return [errorItem as TreeItem]
+    }
     if (!element) {
       // Root level items
       const items: TreeItem[] = []
@@ -61,22 +70,14 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
           `${this.serverStatusData.url}`,
           vscode.TreeItemCollapsibleState.None
         )
-        urlItem.iconPath = new vscode.ThemeIcon('server', new vscode.ThemeColor('#2ea200'))
+        urlItem.iconPath = new vscode.ThemeIcon('server')
         urlItem.tooltip = `Server URL: ${this.currentServerUrl}`
-        // TODO
-        urlItem.command = {
-          command: 'audio.editServerUrlInline',
-          title: 'Edit Server URL (Click to Change Port)',
-          arguments: [this.currentServerUrl]
-        }
+        urlItem.contextValue = 'LEMONADE_SERVER_URL'
         items.push(urlItem as TreeItem)
 
         // Status indicator
         const statusText = this.isServerRunning ? 'Running' : this.isServerRunning === false ? 'Stopped' : 'Unknown'
-        const statusItem = new vscode.TreeItem(
-          `Status: ${statusText}`,
-          vscode.TreeItemCollapsibleState.None
-        )
+        const statusItem = new vscode.TreeItem(`Status: ${statusText}`, vscode.TreeItemCollapsibleState.None)
         const statusColor = this.isServerRunning
           ? 'charts.green'
           : this.isServerRunning === false ? 'charts.red' : 'charts.gray'

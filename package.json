@@ -39,20 +39,13 @@
     },
     "commands": [
       {
+        "command": "audio.changeServerUrl",
+        "title": "Change Lemonade Server URL",
+        "icon": "$(edit)"
+      },
+      {
         "command": "audio.transcribeAudio",
         "title": "Transcribe Audio File"
-      },
-      {
-        "command": "audio.showLemonadeStatus",
-        "title": "Show Lemonade Server Status"
-      },
-      {
-        "command": "audio.refreshLemonadeStatus",
-        "title": "Refresh Lemonade Status"
-      },
-      {
-        "command": "audio.editServerUrl",
-        "title": "Edit Server URL"
       },
       {
         "command": "audio.loadWhisperModel",
@@ -67,6 +60,15 @@
         "title": "Select for Transcription"
       }
     ],
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "audio.changeServerUrl",
+          "when": "view == lemonadeStatus && viewItem == LEMONADE_SERVER_URL",
+          "group": "inline"
+        }
+      ]
+    },
     "configuration": {
       "title": "Audio Transcription",
       "properties": {
