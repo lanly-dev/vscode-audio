@@ -1,7 +1,9 @@
 import * as vscode from 'vscode'
+import * as fs from 'fs'
+import * as path from 'path'
 import { getLemonadeStatus } from './Server'
 import { TreeItem } from 'vscode'
-import { isValidUrl, isWhisperModel, detectWhisperModel } from './Utils'
+import { isValidUrl, isWhisperModel } from './Utils'
 
 export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<void> = new vscode.EventEmitter<void>()
@@ -97,6 +99,12 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
           noModels.iconPath = new vscode.ThemeIcon('circle-filled')
           items.push(noModels as TreeItem)
         }
+
+        const audioHeader = new vscode.TreeItem('Audio Files', vscode.TreeItemCollapsibleState.Expanded)
+        audioHeader.iconPath = new vscode.ThemeIcon('music')
+        audioHeader.contextValue = 'AUDIO_HEADER'
+        items.push(audioHeader as TreeItem)
+
       } else {
         const loadingItem = new vscode.TreeItem('Loading status...', vscode.TreeItemCollapsibleState.None)
         loadingItem.iconPath = new vscode.ThemeIcon('loading~spin')
@@ -104,11 +112,14 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
       }
       return items
     } else if (element.contextValue === 'MODELS_HEADER') return this.getModelChildren()
+    else if (element.contextValue === 'AUDIO_HEADER') return this.getDirHasAudioChildren()
+    else if (element.contextValue === 'AUDIO_DIRECTORY') return this.getAudioFilesChildren(element)
     return []
   }
 
   private getModelChildren(): TreeItem[] {
-    const items: TreeItem[] = []
+    const aModels: TreeItem[] = []
+    const bModels: TreeItem[] = []
 
     for (const model of this.availableModels) {
       const modelId = model.id || model.name || 'Unknown'
@@ -120,7 +131,7 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
           const pickedItem = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None)
           pickedItem.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.green'))
           pickedItem.tooltip = modelId
-          items.push(pickedItem as TreeItem)
+          aModels.push(pickedItem as TreeItem)
         } else {
           const availableItem = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None)
           availableItem.iconPath = new vscode.ThemeIcon('circle-filled')
@@ -131,16 +142,129 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
             title: 'Select Model for Transcription',
             arguments: [modelId]
           }
-          items.push(availableItem as TreeItem)
+          aModels.push(availableItem as TreeItem)
         }
       } else {
         // Non-whisper model - no inline actions, just display
         const otherItem = new vscode.TreeItem(modelId, vscode.TreeItemCollapsibleState.None)
         otherItem.iconPath = new vscode.ThemeIcon('dash')
-        items.push(otherItem as TreeItem)
+        bModels.push(otherItem as TreeItem)
       }
+    }
+    return [...aModels, ...bModels]
+  }
+
+  private getDirHasAudioChildren(): TreeItem[] {
+    const audioExtensions = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma', 'webm', 'opus', 'amr', 'au', 'aiff']
+    const items: TreeItem[] = []
+    const workspaceFolders = vscode.workspace.workspaceFolders
+    if (!workspaceFolders) return [new vscode.TreeItem('No workspace opened', vscode.TreeItemCollapsibleState.None) as TreeItem]
+
+    // Collect all directories that contain audio files (including nested subdirectories)
+    const dirsWithAudio: Set<string> = new Set()
+    for (const folder of workspaceFolders) this.collectDirsWithAudio(folder.uri.fsPath, audioExtensions, dirsWithAudio)
+
+    if (dirsWithAudio.size === 0) return [new vscode.TreeItem('No audio files found', vscode.TreeItemCollapsibleState.None) as TreeItem]
+
+    for (const dir of dirsWithAudio) {
+      const fullPath = path.join(workspaceFolders[0].uri.fsPath, dir === '.' ? '' : dir)
+      const dirItem = new vscode.TreeItem(dir === '.' ? '(root)' : dir, vscode.TreeItemCollapsibleState.Collapsed)
+      dirItem.iconPath = new vscode.ThemeIcon('folder')
+      dirItem.contextValue = 'AUDIO_DIRECTORY'
+      // Store the full path in tooltip for later retrieval
+      dirItem.tooltip = fullPath
+      items.push(dirItem as TreeItem)
     }
 
     return items
   }
+
+  private collectDirsWithAudio(dirPath: string, audioExtensions: string[], result: Set<string>) {
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true })
+    let hasAudioInDir = false
+
+    for (const entry of entries) {
+      if (['node_modules', '.git', '.vscode', 'dist', 'build'].includes(entry.name)) continue
+
+      const fullPath = path.join(dirPath, entry.name)
+      const ext = entry.name.split('.').pop()?.toLowerCase() || ''
+
+      if (entry.isFile() && audioExtensions.includes(ext)) hasAudioInDir = true
+      else if (entry.isDirectory()) this.collectDirsWithAudio(fullPath, audioExtensions, result)
+    }
+
+    // Add directory to result if it has audio files directly or in subdirs
+    if (hasAudioInDir) {
+      const relativeDir = path.relative(
+        vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '',
+        dirPath
+      )
+      result.add(relativeDir === '' ? '.' : relativeDir)
+    }
+  }
+
+  private getAudioIcon(ext: string): vscode.ThemeIcon {
+    const iconMap: Record<string, string> = {
+      mp3: 'piano',
+      wav: 'piano',
+      ogg: 'piano',
+      m4a: 'piano',
+      flac: 'piano',
+      aac: 'piano',
+      webm: 'piano',
+      opus: 'piano'
+    }
+    const iconId = iconMap[ext] || 'file'
+    return new vscode.ThemeIcon(iconId)
+  }
+
+  private getAudioFilesChildren(element: TreeItem): TreeItem[] {
+    const audioExtensions = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma', 'webm', 'opus', 'amr', 'au', 'aiff']
+    const items: TreeItem[] = []
+
+    // Get the directory path from the element's tooltip (stored by getDirHasAudioChildren)
+    const dirPath = typeof element.tooltip === 'string' ? element.tooltip : ''
+    if (!dirPath || !fs.existsSync(dirPath)) {
+      const noFilesItem = new vscode.TreeItem('No audio files', vscode.TreeItemCollapsibleState.None)
+      noFilesItem.iconPath = new vscode.ThemeIcon('info')
+      return [noFilesItem as TreeItem]
+    }
+
+    try {
+      const entries = fs.readdirSync(dirPath, { withFileTypes: true })
+      for (const entry of entries) {
+        if (entry.isFile()) {
+          const ext = entry.name.split('.').pop()?.toLowerCase() || ''
+          if (!audioExtensions.includes(ext)) continue
+
+          const fileItem = new vscode.TreeItem(entry.name, vscode.TreeItemCollapsibleState.None)
+          fileItem.iconPath = this.getAudioIcon(ext)
+          fileItem.contextValue = 'audio_file'
+          fileItem.command = {
+            command: 'audio-lab.openAudioFile',
+            title: 'Open Audio File',
+            arguments: [path.join(dirPath, entry.name)]
+          }
+          items.push(fileItem as TreeItem)
+        }
+      }
+    } catch {
+      console.error(`Audio-Lab: Failed to read directory: ${dirPath}`)
+    }
+
+    if (items.length === 0) {
+      const noFilesItem = new vscode.TreeItem('No audio files', vscode.TreeItemCollapsibleState.None)
+      noFilesItem.iconPath = new vscode.ThemeIcon('info')
+      items.push(noFilesItem as TreeItem)
+    }
+    return items
+  }
+
+  async openAudioFile(fullPath: string): Promise<void> {
+    const uri = vscode.Uri.file(fullPath)
+    const doc = await vscode.workspace.openTextDocument(uri)
+    await vscode.window.showTextDocument(doc)
+  }
 }
+
+
