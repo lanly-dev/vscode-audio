@@ -11,7 +11,7 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
   private isServerRunning: boolean | null
   private serverStatusData: any
   private availableModels: any[] = []
-  private loadedWhisperModel: string | null
+  private pickedModel: string | null
   private getError: Error | null
 
   constructor() {
@@ -22,13 +22,14 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
     this.isServerRunning = false
     this.serverStatusData = null
     this.availableModels = []
-    this.loadedWhisperModel = null
+    this.pickedModel = null
     this.getError = null
   }
 
   async refreshStatus(): Promise<void> {
-    this.currentServerUrl = vscode.workspace.getConfiguration('audio-lab').get<string>('lemonadeServerUrl')!
     this.getError = null
+    this.currentServerUrl = vscode.workspace.getConfiguration('audio-lab').get<string>('lemonadeServerUrl')!
+    this.pickedModel = vscode.workspace.getConfiguration('audio-lab').get<string>('pickedModel')!
     if (!isValidUrl(this.currentServerUrl)) {
       this.isServerRunning = null
       this.availableModels = []
@@ -45,8 +46,6 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
     this.availableModels = this.serverStatusData.models || []
     this.isServerRunning = this.serverStatusData.isRunning !== false  // Use the isRunning flag we added
 
-    // Detect whisper model for transcription
-    this.loadedWhisperModel = detectWhisperModel(this.availableModels)
     this._onDidChangeTreeData.fire()
   }
 
@@ -115,73 +114,24 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
       const modelId = model.id || model.name || 'Unknown'
 
       if (isWhisperModel(model)) {
-        // Whisper model - show with start/stop and pick actions
         let label = modelId
-        let tooltip = modelId
 
-        if (this.loadedWhisperModel === modelId) {
-          label += ' (Loaded)'
-          tooltip = `${modelId} - Currently loaded\nClick to unload`
-
-          const loadedItem = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None)
-          loadedItem.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('#2ea200'))
-          loadedItem.tooltip = tooltip
-          loadedItem.contextValue = 'whisper-loaded'
-          loadedItem.command = {
-            command: 'audio-lab.unloadWhisperModel',
-            title: 'Unload Model',
-            arguments: [modelId]
-          }
-
-          // Pick button as inline action
-          const pickBtn = new vscode.TreeItem('✓ Select', vscode.TreeItemCollapsibleState.None)
-          pickBtn.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('#2ea200'))
-          pickBtn.command = {
-            command: 'audio-lab.pickTranscriptionModel',
-            title: 'Select for Transcription',
-            arguments: [modelId]
-          }
-
-          items.push(loadedItem as TreeItem)
-          items.push(pickBtn as TreeItem)
+        if (this.pickedModel === modelId) {
+          const pickedItem = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None)
+          pickedItem.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.green'))
+          pickedItem.tooltip = modelId
+          items.push(pickedItem as TreeItem)
         } else {
-          tooltip = `${modelId}\nClick to load for transcription`
-
-          const availableItem = new vscode.TreeItem(
-            label,
-            vscode.TreeItemCollapsibleState.None
-          )
-          availableItem.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('#dcb67a'))
-          availableItem.tooltip = tooltip
-          availableItem.contextValue = 'whisper-available'
-          availableItem.command = {
-            command: 'audio-lab.loadWhisperModel',
-            title: 'Load Model',
-            arguments: [modelId]
-          }
-
-          // Pick button as inline action
-          const pickBtn = new vscode.TreeItem(
-            '✓ Select',
-            vscode.TreeItemCollapsibleState.None
-          )
-          pickBtn.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('#00f'))
-          pickBtn.command = {
-            command: 'audio-lab.pickTranscriptionModel',
-            title: 'Select for Transcription',
-            arguments: [modelId]
-          }
-
+          const availableItem = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None)
+          availableItem.iconPath = new vscode.ThemeIcon('circle-filled')
+          availableItem.tooltip = modelId
+          availableItem.contextValue = 'WHISPER_AVAILABLE'
           items.push(availableItem as TreeItem)
-          items.push(pickBtn as TreeItem)
         }
       } else {
         // Non-whisper model - no inline actions, just display
-        const otherItem = new vscode.TreeItem(
-          modelId,
-          vscode.TreeItemCollapsibleState.None
-        )
-        otherItem.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('#ccc'))
+        const otherItem = new vscode.TreeItem(modelId, vscode.TreeItemCollapsibleState.None)
+        otherItem.iconPath = new vscode.ThemeIcon('dash')
         items.push(otherItem as TreeItem)
       }
     }

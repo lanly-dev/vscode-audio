@@ -39,20 +39,13 @@
         "icon": "$(edit)"
       },
       {
+        "command": "audio-lab.pickModel",
+        "title": "Select Model for Transcription",
+        "icon": "$(check)"
+      },
+      {
         "command": "audio-lab.transcribeAudio",
         "title": "Transcribe audio File"
-      },
-      {
-        "command": "audio-lab.loadWhisperModel",
-        "title": "Load Whisper Model"
-      },
-      {
-        "command": "audio-lab.unloadWhisperModel",
-        "title": "Unload Whisper Model"
-      },
-      {
-        "command": "audio-lab.pickTranscriptionModel",
-        "title": "Select for Transcription"
       }
     ],
     "menus": {
@@ -60,6 +53,11 @@
         {
           "command": "audio-lab.changeServerUrl",
           "when": "view == lemonadeStatus && viewItem == LEMONADE_SERVER_URL",
+          "group": "inline"
+        },
+        {
+          "command": "audio-lab.pickModel",
+          "when": "view == lemonadeStatus && viewItem == WHISPER_AVAILABLE",
           "group": "inline"
         }
       ]
@@ -71,6 +69,11 @@
           "type": "string",
           "default": "http://localhost:13305",
           "description": "Lemonade server URL"
+        },
+        "audio-lab.pickedModel": {
+          "type": "string",
+          "default": null,
+          "description": "Currently picked model for transcription"
         }
       }
     }

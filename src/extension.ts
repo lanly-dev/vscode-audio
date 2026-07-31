@@ -4,7 +4,7 @@ import * as path from 'path'
 import { spawn } from 'child_process'
 import LemonadeTreeDataProvider from './Treeview'
 import { changeServerUrl } from './Config'
-import { loadModel, transcribeAudio } from './Server'
+import { pickModel, transcribeAudio } from './Server'
 
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -12,14 +12,13 @@ export async function activate(context: vscode.ExtensionContext) {
   const lemonadeProvider = await createTreeViews()
   const d1 = rc('audio-lab.transcribeAudio', () => transcribeAudio(context))
   const d2 = rc('audio-lab.changeServerUrl', () => changeServerUrl(lemonadeProvider))
-  const d3 = rc('audio-lab.loadWhisperModel', async (modelId: string) => {
-    if (!modelId) return
-    try {
-      await loadModel(modelId)
-      lemonadeProvider.refreshStatus()
-    } catch (error) {
-      vscode.window.showErrorMessage(`Failed to load model: ${(error as Error).message}`)
+  const d3 = rc('audio-lab.pickModel', async (treeItem: { label: string }) => {
+    const { label: modelId } = treeItem
+    if (!modelId) {
+      vscode.window.showInformationMessage('No model selected.')
+      return
     }
+    await pickModel(modelId, lemonadeProvider)
   })
   context.subscriptions.push(d1, d2, d3)
 }

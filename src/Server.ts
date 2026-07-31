@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 import path from 'path'
 import fs from 'fs'
+import LemonadeTreeDataProvider from './Treeview'
 
 // Function to get Lemonade server status and available models
 export async function getLemonadeStatus(): Promise<any> {
@@ -25,39 +26,9 @@ export async function getLemonadeStatus(): Promise<any> {
   }
 }
 
-export async function loadModel(modelId: string): Promise<void> {
-  const serverUrl = vscode.workspace.getConfiguration('audio-lab').get<string>('lemonadeServerUrl')
-  try {
-    const requestBody = { model_name: modelId }
-    const response = await fetch(`${serverUrl}/api/v1/load`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
-    })
-
-    if (!response.ok) throw new Error(`Failed to load model: Server returned ${response.status}`)
-    await response.json()
-  } catch (error) {
-    throw new Error(`Error loading model: ${(error as Error).message}`)
-  }
-}
-
-// Function to unload a model from the Lemonade server
-export async function unloadModel(serverUrl: string, modelId: string): Promise<void> {
-  try {
-    const requestBody = [modelId]
-    const response = await fetch(`${serverUrl}/v1/models/unload`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
-    })
-
-    if (!response.ok) throw new Error(`Failed to unload model: Server returned ${response.status}`)
-
-    await response.json()
-  } catch (error) {
-    throw new Error(`Error unloading model: ${(error as Error).message}`)
-  }
+export async function pickModel(modelId: string, lemonadeProvider: LemonadeTreeDataProvider): Promise<void> {
+  await vscode.workspace.getConfiguration('audio-lab').update('pickedModel', modelId)
+  await lemonadeProvider.refreshStatus()
 }
 
 export async function transcribeAudio(context: vscode.ExtensionContext) {
@@ -97,7 +68,6 @@ export async function transcribeAudio(context: vscode.ExtensionContext) {
   const fileName = path.basename(targetUri.fsPath)
   const serverUrl = 'http://localhost:13305'
   const model = 'Whisper-Large-v3-Turbo'
-
 
   try {
     vscode.window.showInformationMessage(`Transcribing ${fileName} using ${model}...`)
