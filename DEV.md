@@ -1,0 +1,1 @@
+- Explorer vs Activity Bar

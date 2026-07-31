@@ -1,15 +1,14 @@
 import * as vscode from 'vscode'
 import { getLemonadeStatus } from './Server'
+import { TreeItem } from 'vscode'
+import { isValidUrl, isWhisperModel, detectWhisperModel } from './Utils'
 
-interface LemonadeStatusItem extends vscode.TreeItem {
-  type: string
-}
+export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
+  private _onDidChangeTreeData: vscode.EventEmitter<void> = new vscode.EventEmitter<void>()
+  readonly onDidChangeTreeData: vscode.Event<void> = this._onDidChangeTreeData.event
 
-export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataProvider<any> {
-  private _onDidChangeTreeData: vscode.EventEmitter<any> = new vscode.EventEmitter<any>()
-  readonly onDidChangeTreeData: vscode.Event<any> = this._onDidChangeTreeData.event
-  private currentServerUrl: string = 'http://localhost:13305'
-  private isServerRunning: boolean = false
+  private currentServerUrl: string
+  private isServerRunning: boolean
   private serverStatusData: any = null
   private availableModels: any[] = []
   private loadedWhisperModel: string | null = null
@@ -18,16 +17,21 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
   constructor() {
     const config = vscode.workspace.getConfiguration('audio')
     this.currentServerUrl = config.get<string>('lemonadeServerUrl', 'http://localhost:13305')
+    this.isServerRunning = false
   }
 
   updateServerUrl(): void {
     const config = vscode.workspace.getConfiguration('audio')
-    this.currentServerUrl = config.get<string>('lemonadeServerUrl', 'http://localhost:13305')
+    if (!config.get<string>('lemonadeServerUr')) {
+      console.error('Lemonade server URL is not configured.')
+      return
+    }
+    this.currentServerUrl = config.get<string>('lemonadeServerUrl')!
   }
 
   async refreshStatus(): Promise<void> {
     try {
-      if (!this.isValidUrl(this.currentServerUrl)) {
+      if (!isValidUrl(this.currentServerUrl)) {
         this.serverStatusData = {
           status: 'invalid' as const,
           models: [],
@@ -35,7 +39,7 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
           error: 'Invalid URL format'
         }
         this.isServerRunning = false
-        this._onDidChangeTreeData.fire('test')
+        this._onDidChangeTreeData.fire(void 0)
         return
       }
 
@@ -44,7 +48,7 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
       this.isServerRunning = this.serverStatusData.isRunning !== false  // Use the isRunning flag we added
 
       // Detect whisper model for transcription
-      this.loadedWhisperModel = this.detectWhisperModel()
+      this.loadedWhisperModel = detectWhisperModel(this.availableModels)
       this._onDidChangeTreeData.fire(void 0)
     } catch (error) {
       console.error('Error refreshing Lemonade status:', error)
@@ -56,18 +60,18 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
       }
       this.isServerRunning = false
       this.availableModels = []
-      this._onDidChangeTreeData.fire('test')
+      this._onDidChangeTreeData.fire(void 0)
     }
   }
 
-  getTreeItem(element: LemonadeStatusItem): vscode.TreeItem {
+  getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
     return element
   }
 
-  async getChildren(element?: LemonadeStatusItem): Promise<LemonadeStatusItem[]> {
+  async getChildren(element?: TreeItem): Promise<TreeItem[]> {
     if (!element) {
       // Root level items
-      const items: LemonadeStatusItem[] = []
+      const items: TreeItem[] = []
 
       if (this.serverStatusData) {
         // Server URL item with edit action - click to open input box for port editing
@@ -82,7 +86,7 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
           title: 'Edit Server URL (Click to Change Port)',
           arguments: [this.currentServerUrl]
         }
-        items.push(urlItem as LemonadeStatusItem)
+        items.push(urlItem as TreeItem)
 
         // Status indicator
         const statusText = this.isServerRunning ? 'Running' : 'Stopped'
@@ -91,7 +95,7 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
           vscode.TreeItemCollapsibleState.None
         )
         statusItem.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor(this.isServerRunning ? '#2ea200' : '#f97583'))
-        items.push(statusItem as LemonadeStatusItem)
+        items.push(statusItem as TreeItem)
 
         // Start/Stop inline buttons for server
         if (this.serverStatusData.status !== 'invalid') {
@@ -105,7 +109,7 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
             title: 'Stop Lemonade Server',
             arguments: [this.currentServerUrl]
           }
-          items.push(stopBtn as LemonadeStatusItem)
+          items.push(stopBtn as TreeItem)
 
           if (this.isServerRunning) {
             const startBtn = new vscode.TreeItem(
@@ -118,7 +122,7 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
               title: 'Start Lemonade Server',
               arguments: [this.currentServerUrl]
             }
-            items.push(startBtn as LemonadeStatusItem)
+            items.push(startBtn as TreeItem)
           }
         }
 
@@ -129,7 +133,7 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
             vscode.TreeItemCollapsibleState.None
           )
           errorItem.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('#f97583'))
-          items.push(errorItem as LemonadeStatusItem)
+          items.push(errorItem as TreeItem)
         }
 
         // Add refresh command
@@ -142,7 +146,7 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
           command: 'audio.refreshLemonadeStatus',
           title: 'Refresh Status'
         }
-        items.push(refreshItem as LemonadeStatusItem)
+        items.push(refreshItem as TreeItem)
 
         // Models section header
         if (this.availableModels.length > 0) {
@@ -152,14 +156,14 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
           )
           modelsHeader.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('#2ea200'))
           modelsHeader.contextValue = 'models-header'
-          items.push(modelsHeader as LemonadeStatusItem)
+          items.push(modelsHeader as TreeItem)
         } else {
           const noModels = new vscode.TreeItem(
             'No models available',
             vscode.TreeItemCollapsibleState.None
           )
           noModels.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('#808080'))
-          items.push(noModels as LemonadeStatusItem)
+          items.push(noModels as TreeItem)
         }
       } else {
         const loadingItem = new vscode.TreeItem(
@@ -167,7 +171,7 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
           vscode.TreeItemCollapsibleState.None
         )
         loadingItem.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('#808080'))
-        items.push(loadingItem as LemonadeStatusItem)
+        items.push(loadingItem as TreeItem)
       }
 
       return items
@@ -178,16 +182,14 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
     return []
   }
 
-  private getModelChildren(): LemonadeStatusItem[] {
-    const items: LemonadeStatusItem[] = []
+  private getModelChildren(): TreeItem[] {
+    const items: TreeItem[] = []
 
     for (const model of this.availableModels) {
       const modelId = model.id || model.name || 'Unknown'
 
-      // Check if this is a whisper/audio transcription model
-      const isWhisperModel = this.isWhisperModel(model)
 
-      if (isWhisperModel) {
+      if (isWhisperModel(model)) {
         // Whisper model - show with start/stop and pick actions
         let label = `Whisper: ${modelId}`
         let tooltip = modelId
@@ -223,8 +225,8 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
             arguments: [modelId]
           }
 
-          items.push(loadedItem as LemonadeStatusItem)
-          items.push(pickBtn as LemonadeStatusItem)
+          items.push(loadedItem as TreeItem)
+          items.push(pickBtn as TreeItem)
         } else {
           tooltip = `${modelId}\nClick to load for transcription`
           iconColor = 'yellow'
@@ -254,8 +256,8 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
             arguments: [modelId]
           }
 
-          items.push(availableItem as LemonadeStatusItem)
-          items.push(pickBtn as LemonadeStatusItem)
+          items.push(availableItem as TreeItem)
+          items.push(pickBtn as TreeItem)
         }
       } else {
         // Non-whisper model - no inline actions, just display
@@ -264,32 +266,10 @@ export default class LemonadeStatusTreeDataProvider implements vscode.TreeDataPr
           vscode.TreeItemCollapsibleState.None
         )
         otherItem.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('#808080'))
-        items.push(otherItem as LemonadeStatusItem)
+        items.push(otherItem as TreeItem)
       }
     }
 
     return items
-  }
-
-  private isWhisperModel(model: any): boolean {
-    const id = (model.id || model.name || '').toLowerCase()
-    return id.includes('whisper') || id.includes('transcri') || id.includes('audio')
-  }
-
-  private detectWhisperModel(): string | null {
-    for (const model of this.availableModels) {
-      const id = (model.id || model.name || '').toLowerCase()
-      if (id.includes('whisper') || id.includes('transcri')) return model.id || model.name
-    }
-    return null
-  }
-
-  private isValidUrl(url: string): boolean {
-    try {
-      new URL(url)
-      return true
-    } catch {
-      return false
-    }
   }
 }

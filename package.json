@@ -10,7 +10,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onView:lemonadeStatus"
+    "onStartupFinished"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -20,6 +20,20 @@
           "id": "audio-activity-bar",
           "title": "Audio",
           "icon": "$(mic)"
+        }
+      ]
+    },
+    "views": {
+      "audio-activity-bar": [
+        {
+          "id": "lemonadeStatus",
+          "name": "Lemonade Server Status",
+          "icon": "$(server)"
+        },
+        {
+          "id": "audioFiles",
+          "name": "Audio Files",
+          "icon": "$(file)"
         }
       ]
     },

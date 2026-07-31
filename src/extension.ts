@@ -6,26 +6,23 @@ import LemonadeStatusTreeDataProvider from './Treeview'
 import { transcribeAudio } from './Server'
 
 
-// Register tree view for Lemonade status
-async function createTreeViews(context: vscode.ExtensionContext): Promise<{ lemonadeProvider: LemonadeStatusTreeDataProvider, lemonadeTreeView: vscode.TreeView<any> }> {
-  const lemonadeProvider = new LemonadeStatusTreeDataProvider()
-  const lemonadeTreeView = vscode.window.createTreeView('lemonadeStatus', {
-    treeDataProvider: lemonadeProvider,
-    showCollapseAll: true
-  })
-
-  // Initial refresh to load status - CRITICAL: must call after creating the TreeView
-  await lemonadeProvider.refreshStatus()
-  return { lemonadeProvider, lemonadeTreeView }
-}
-
 export async function activate(context: vscode.ExtensionContext) {
   const rc = vscode.commands.registerCommand
-  await createTreeViews(context)
-
+  await createTreeViews()
   const d1 = rc('audio.transcribeAudio', () => transcribeAudio(context))
   context.subscriptions.push(d1)
 }
+
+// Register tree view for Lemonade status
+async function createTreeViews() {
+  const lemonadeProvider = new LemonadeStatusTreeDataProvider()
+  vscode.window.createTreeView('lemonadeStatus', {
+    treeDataProvider: lemonadeProvider,
+    showCollapseAll: true
+  })
+  await lemonadeProvider.refreshStatus()
+}
+
 
 //   // Register command to pick transcription model from available models
 //   const pickModelDisposable = vscode.commands.registerCommand('audio.pickTranscriptionModel', async (modelId?: string) => {
