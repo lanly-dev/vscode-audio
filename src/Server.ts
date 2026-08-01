@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import path from 'path'
 import fs from 'fs'
 import LemonadeTreeDataProvider from './Treeview'
+import { showTheTranscript } from './Utils'
 
 // Function to get Lemonade server status and available models
 export async function getLemonadeStatus(): Promise<any> {
@@ -99,12 +100,8 @@ export async function transcribeAudio(fullPath?: string) {
         const data = await response.json()
         const transcribedText = data?.text || data?.transcript || ''
 
-        if (transcribedText) {
-          // Open the transcribed output in a new VS Code document
-          const doc = await vscode.workspace.openTextDocument({ content: transcribedText })
-          await vscode.window.showTextDocument(doc)
-          vscode.window.showInformationMessage(`Transcription complete for ${fileName}`)
-        } else vscode.window.showErrorMessage('Transcription finished, but no text was returned in response.')
+        if (transcribedText) showTheTranscript(fileName, transcribedText)
+        else vscode.window.showErrorMessage('Transcription finished, but no text was returned in response.')
 
       } catch (error) {
         console.error('AudioLab: transcription error:', error)
