@@ -56,7 +56,7 @@
       },
       {
         "command": "audio-lab.pickModel",
-        "title": "AudioLab: Pick Whisper Model for Transcription"
+        "title": "Pick This Model"
       },
       {
         "command": "audio-lab.refreshServerStatus",
@@ -77,6 +77,12 @@
       }
     ],
     "menus": {
+      "commandPalette": [
+        {
+          "command": "audio-lab.pickModel",
+          "when": "false"
+        }
+      ],
       "view/item/context": [
         {
           "command": "audio-lab.changeServerUrl",

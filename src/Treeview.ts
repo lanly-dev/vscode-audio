@@ -86,8 +86,9 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
         const statusItem = new vscode.TreeItem(`Status: ${statusText}`, vscode.TreeItemCollapsibleState.None)
         const statusColor = this.isServerRunning
           ? 'charts.green'
+          // Red if stopped, gray if unknown, but error case is handled above, so this won't be shown
           : this.isServerRunning === false ? 'charts.red' : 'charts.gray'
-        statusItem.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor(statusColor))
+        statusItem.iconPath = new vscode.ThemeIcon('debug-start', new vscode.ThemeColor(statusColor))
         items.push(statusItem as TreeItem)
 
         // Models section header
@@ -172,7 +173,7 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
 
     for (const dir of dirsWithAudio) {
       const fullPath = path.join(workspaceFolders[0].uri.fsPath, dir === '.' ? '' : dir)
-      const dirItem = new vscode.TreeItem(dir === '.' ? '(root)' : dir, vscode.TreeItemCollapsibleState.Collapsed)
+      const dirItem = new vscode.TreeItem(dir === '.' ? '(Workspace)' : dir, vscode.TreeItemCollapsibleState.Collapsed)
       dirItem.iconPath = new vscode.ThemeIcon('folder')
       dirItem.contextValue = 'AUDIO_DIRECTORY'
       dirItem.tooltip = fullPath

@@ -4,6 +4,7 @@ DEV.md
 eslint.config.mjs
 node_modules/
 src/
+test/
 tsconfig.json
 vsc-extension-quickstart.md
 webpack.config.js
