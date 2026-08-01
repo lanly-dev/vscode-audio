@@ -61,125 +61,55 @@ export async function transcribeAudio(fullPath?: string) {
   }
 
   const fileName = path.basename(targetUri.fsPath)
-  const serverUrl = vscode.workspace.getConfiguration('audio-lab').get<string>('lemonadeServerUrl')
+  let serverUrl = vscode.workspace.getConfiguration('audio-lab').get<string>('lemonadeServerUrl')!
 
-  try {
-    vscode.window.showInformationMessage(`Transcribing ${fileName} using ${model}...`)
+  // Clean trailing slashes if present
+  serverUrl = serverUrl.replace(/\/+$/, '')
 
-    // Read the audio file content
-    const audioBuffer = await fs.promises.readFile(targetUri.fsPath)
-
-    // Send transcription request
-    const formData = new FormData()
-    formData.append('file', new Blob([audioBuffer]), fileName)
-    formData.append('model', model)
-    formData.append('upload_path', '/uploads/')
-    formData.append('return_url', '/api/transcribe-status')
-
-    const response = await fetch(`${serverUrl}/api/v1/audio/transcriptions`, {
-      method: 'POST',
-      body: formData
-    })
-
-    if (!response.ok) throw new Error(`Transcription failed: Server returned ${response.status}`)
-
-    // Parse response to check if text was returned directly or if we need to poll for progress
-    let responseData: any = null
-    try {
-      responseData = await response.json()
-    } catch {
-      // Response body is not JSON (e.g., plain text response)
-    }
-
-    // Check if response includes text directly or if we need to poll for progress
-    if (responseData && responseData.text) {
-      // Direct text response - show immediately
-      const doc = await vscode.workspace.openTextDocument({ content: responseData.text })
-      await vscode.window.showTextDocument(doc)
-
-      vscode.window.showInformationMessage(`Transcription complete for ${fileName}`)
-      return
-    }
-
-    const statusUrl = responseData?.status_url || responseData?.return_url || '/api/transcribe-status'
-
-    // Double check this
-    vscode.window.withProgress({
+  // Wrap the blocking request in VS Code's progress notification
+  await vscode.window.withProgress(
+    {
       location: vscode.ProgressLocation.Notification,
-      title: `Transcribing ${fileName}...`,
-      cancellable: true
-    }, async (progress, cancellationToken) => {
-      let attempts = 0
-      const maxAttempts = 300 // 5 minutes at 1 second intervals
-      let lastProgress = ''
+      title: `Transcribing ${fileName}`,
+      cancellable: false
+    },
+    async (progress) => {
+      progress.report({ message: `Processing with model: ${model}...` })
 
-      while (attempts < maxAttempts && !cancellationToken.isCancellationRequested) {
-        attempts++
+      try {
+        // Read local file buffer
+        const audioBuffer = await fs.promises.readFile(targetUri.fsPath)
 
-        try {
-          const statusResponse = await fetch(
-            `${serverUrl}${statusUrl}`.replace('//', '/'),
-            {
-              method: 'GET',
-              headers: { 'Content-Type': 'application/json' }
-            }
-          ).catch(() => null)
+        // Build standard multipart request
+        const formData = new FormData()
+        formData.append('file', new Blob([audioBuffer]), fileName)
+        formData.append('model', model)
 
-          if (statusResponse && statusResponse.ok) {
-            const statusData = await statusResponse.json().catch(() => null)
+        // Lemonade's Whisper API endpoint
+        const response = await fetch(`${serverUrl}/v1/audio/transcriptions`, {
+          method: 'POST',
+          body: formData
+        })
 
-            if (statusData) {
-              // Update progress based on status field
-              const taskStatus = statusData.status || statusData.state || ''
-              const progressPercent = statusData.progress || statusData.percent || 0
-
-              // Update notification progress
-              progress.report({
-                message: `${taskStatus} - ${Math.round(progressPercent * 100)}%`,
-                increment: progressPercent / maxAttempts * 100
-              })
-
-              lastProgress = taskStatus
-
-              // If transcription is complete
-              if (taskStatus === 'completed' || taskStatus === 'done' || taskStatus === 'success' || statusData.text) {
-                const transcriptText = statusData.text || responseData?.text || ''
-                if (transcriptText) {
-                  const doc = await vscode.workspace.openTextDocument({
-                    content: transcriptText
-                  })
-                  await vscode.window.showTextDocument(doc)
-                  vscode.window.showInformationMessage(`Transcription complete for ${fileName}`)
-                } else vscode.window.showErrorMessage('Transcription completed but no text returned')
-                return
-              }
-
-              // If transcription failed
-              if (taskStatus === 'error' || taskStatus === 'failed' || statusData.error) {
-                const errorMsg = statusData.error || statusData.message || 'Unknown error'
-                vscode.window.showErrorMessage(`Transcription failed: ${errorMsg}`)
-                return
-              }
-            }
-          }
-
-          // Wait before next poll (use 500ms for progress, faster response)
-          await new Promise(resolve => setTimeout(resolve, 500))
-        } catch (error) {
-          console.error('Progress poll error:', error)
-          progress.report({ message: `Checking status... (${attempts}s)` })
-          await new Promise(resolve => setTimeout(resolve, 1000))
+        if (!response.ok) {
+          const errText = await response.text().catch(() => '')
+          throw new Error(`Server returned ${response.status}: ${errText || response.statusText}`)
         }
-      }
 
-      if (attempts >= maxAttempts) {
-        // Timeout
-        const msg = `Transcription still in progress for ${fileName}. It may take a while for large files.`
-        vscode.window.showWarningMessage(msg)
+        const data = await response.json()
+        const transcribedText = data?.text || data?.transcript || ''
+
+        if (transcribedText) {
+          // Open the transcribed output in a new VS Code document
+          const doc = await vscode.workspace.openTextDocument({ content: transcribedText })
+          await vscode.window.showTextDocument(doc)
+          vscode.window.showInformationMessage(`Transcription complete for ${fileName}`)
+        } else vscode.window.showErrorMessage('Transcription finished, but no text was returned in response.')
+
+      } catch (error) {
+        console.error('AudioLab: transcription error:', error)
+        vscode.window.showErrorMessage(`Transcription failed: ${(error as Error).message}`)
       }
-    })
-  } catch (error) {
-    console.error('AudioLab: transcription error:', error)
-    vscode.window.showErrorMessage(`Transcription failed: ${(error as Error).message}`)
-  }
+    }
+  )
 }
