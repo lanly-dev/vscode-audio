@@ -84,7 +84,12 @@ export async function transcribeAudio(fullPath?: string) {
     if (!response.ok) throw new Error(`Transcription failed: Server returned ${response.status}`)
 
     // Parse response to check if text was returned directly or if we need to poll for progress
-    const responseData = await response.json().catch(() => null)
+    let responseData: any = null
+    try {
+      responseData = await response.json()
+    } catch {
+      // Response body is not JSON (e.g., plain text response)
+    }
 
     // Check if response includes text directly or if we need to poll for progress
     if (responseData && responseData.text) {
@@ -174,7 +179,7 @@ export async function transcribeAudio(fullPath?: string) {
       }
     })
   } catch (error) {
-    console.error('audio-lab: transcription error:', error)
+    console.error('AudioLab: transcription error:', error)
     vscode.window.showErrorMessage(`Transcription failed: ${(error as Error).message}`)
   }
 }

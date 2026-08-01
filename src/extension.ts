@@ -18,7 +18,8 @@ export async function activate(context: vscode.ExtensionContext) {
     await pickModel(modelId, lemonadeProvider)
   })
   const d4 = rc('audio-lab.openAudioFile', (fullPath: string) => {
-    return lemonadeProvider.openAudioItem(fullPath)
+    const uri = vscode.Uri.file(fullPath)
+    vscode.commands.executeCommand('vscode.open', uri)
   })
 
   const d5 = rc('audio-lab.revealInExplorer', (item: vscode.TreeItem) => {
@@ -46,58 +47,7 @@ async function createTreeViews() {
 //     vscode.window.showInformationMessage('Lemonade status refreshed')
 //   })
 
-
-//   // Register command to unload whisper model
-//   const unloadWhisperDisposable = vscode.commands.registerCommand('audio-lab.unloadWhisperModel', async (modelId?: string) => {
-//     if (!modelId || loadedWhisperModel !== modelId) {
-//       // If no model or not the loaded one, get from state
-//       modelId = loadedWhisperModel || undefined
-//     }
-
-//     if (modelId) {
-//       try {
-//         await unloadModel(currentServerUrl, modelId)
-//         if (loadedWhisperModel === modelId) {
-//           loadedWhisperModel = null
-//         }
-//         await lemonadeProvider.refreshStatus()
-//         vscode.window.showInformationMessage(`Model unloaded: ${modelId}`)
-//       } catch (error) {
-//         vscode.window.showErrorMessage(`Failed to unload model: ${(error as Error).message}`)
-//       }
-//     }
-//   })
-
-//   // Register context menu for files in explorer - detect audio-lab files
-//   const audio-labFileContextDisposable = vscode.commands.registerCommand('audio-lab.setContextForaudio-labFiles', async (node: any) => {
-//     let uri: vscode.Uri
-
-//     if (node && node.uri) {
-//       uri = node.uri
-//     } else if (vscode.window.activeTextEditor) {
-//       uri = vscode.window.activeTextEditor.document.uri
-//     } else {
-//       return
-//     }
-
-//     const audio-labExtensions = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma', 'webm']
-//     const ext = uri.fsPath.split('.').pop()?.toLowerCase()
-
-//     if (audio-labExtensions.includes(ext || '')) {
-//       await context.workspaceState.update('lastSelectedFile', uri)
-//       // Show status bar item to indicate file is selected for transcription
-//       vscode.window.showInformationMessage(`audio-lab file selected for transcription: ${path.basename(uri.fsPath)}`)
-//     }
-//   })
-
-//   // Listen for configuration changes to update server URL
-//   const configChangeDisposable = vscode.workspace.onDidChangeConfiguration(async (event) => {
-//     if (event.affectsConfiguration('audio-lab.lemonadeServerUrl')) {
-//       await lemonadeProvider.refreshStatus()
-//     }
-//   })
-
 // This method is called when your extension is deactivated
 export function deactivate() {
-  console.info('audio-lab extension deactivated')
+  console.info('AudioLab extension deactivated')
 }

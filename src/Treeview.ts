@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import * as fs from 'fs'
 import * as path from 'path'
-import { getLemonadeStatus } from './Server'
+import { getLemonadeStatus, transcribeAudio } from './Server'
 import { TreeItem } from 'vscode'
 import { isValidUrl, isWhisperModel } from './Utils'
 
@@ -173,7 +173,6 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
       dirItem.tooltip = fullPath
       items.push(dirItem as TreeItem)
     }
-
     return items
   }
 
@@ -245,80 +244,14 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
             title: 'Open Audio File in Editor',
             arguments: [fullPath]
           }
-          const fileItemWithCommands = fileItem as vscode.TreeItem & { commands?: any[] }
-          fileItemWithCommands.commands = [
-            { command: 'audio-lab.openAudioFile', title: 'Open in Editor', arguments: [fullPath] },
-            { command: 'audio-lab.transcribeAudioItem', title: 'Transcribe', arguments: [fullPath] },
-            { command: 'audio-lab.revealInExplorer', title: 'Reveal in Explorer', arguments: [fullPath] }
-          ]
           items.push(fileItem as TreeItem)
         }
       }
     } catch {
-      console.error(`Audio-Lab: Failed to read directory: ${dirPath}`)
+      console.error(`AudioLab: Failed to read directory: ${dirPath}`)
     }
 
     if (items.length === 0) return [new vscode.TreeItem('No audio files', vscode.TreeItemCollapsibleState.None) as TreeItem]
     return items
   }
-
-  async openAudioItem(fullPath: string): Promise<void> {
-    const uri = vscode.Uri.file(fullPath)
-    const doc = await vscode.workspace.openTextDocument(uri)
-    await vscode.window.showTextDocument(doc)
-  }
-
-  async transcribeAudioFile(fullPath: string): Promise<void> {
-    const config = vscode.workspace.getConfiguration('audio-lab')
-    const serverUrl = config.get<string>('lemonadeServerUrl')!
-
-    // Check if a whisper model is picked
-    const pickedModel = config.get<string>('pickedModel')
-    if (!pickedModel) {
-      vscode.window.showWarningMessage('Please select a Whisper model first from the Audio-Lab tree view.')
-      return
-    }
-
-    try {
-      const response = await fetch(`${serverUrl}/transcribe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: pickedModel,
-          file: fullPath,
-          response_format: 'srt',
-          verbosn: true
-        })
-      })
-
-      if (!response.ok) throw new Error(`Transcription failed: ${response.statusText}`)
-
-      const data = await response.json()
-
-      // Show transcription result in output channel
-      const outputChannel = vscode.window.createOutputChannel('Audio-Lab: Transcription')
-      outputChannel.clear()
-
-      if (data.text) {
-        outputChannel.appendLine(`Transcription for: ${path.basename(fullPath)}`)
-        outputChannel.appendLine('='.repeat(50))
-        outputChannel.appendLine(data.text)
-      } else if (data.vodetranscriptions) {
-        outputChannel.appendLine(`Transcription for: ${path.basename(fullPath)}`)
-        outputChannel.appendLine('='.repeat(50))
-        for (const seg of data.vodetranscriptions) outputChannel.appendLine(`[${seg.start}s - ${seg.end}s]: ${seg.text}`)
-      } else outputChannel.appendLine(JSON.stringify(data, null, 2))
-
-      outputChannel.show()
-    } catch (error) {
-      vscode.window.showErrorMessage(`Transcription error: ${error instanceof Error ? error.message : String(error)}`)
-    }
-  }
-
-  async revealInExplorer(fullPath: string): Promise<void> {
-    const uri = vscode.Uri.file(fullPath)
-    await vscode.commands.executeCommand('revealInExplorer', uri)
-  }
 }
-
-
