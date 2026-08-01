@@ -18,7 +18,7 @@
       "activitybar": [
         {
           "id": "audio-lab-activity-bar",
-          "title": "audio-lab",
+          "title": "AudioLab",
           "icon": "$(mic)"
         }
       ]
@@ -35,28 +35,33 @@
     "commands": [
       {
         "command": "audio-lab.changeServerUrl",
-        "title": "Change Lemonade Server URL",
+        "title": "AudioLab: Change Lemonade Server URL",
         "icon": "$(edit)"
       },
       {
         "command": "audio-lab.openAudioFile",
-        "title": "Open Audio File in Editor"
+        "title": "AudioLab: Open Audio File in Editor"
       },
       {
         "command": "audio-lab.pickModel",
-        "title": "Pick Whisper Model for Transcription"
+        "title": "AudioLab: Pick Whisper Model for Transcription"
+      },
+      {
+        "command": "audio-lab.refreshServerStatus",
+        "title": "AudioLab: Refresh Lemonade Server Status",
+        "icon": "$(refresh)"
       },
       {
         "command": "audio-lab.revealInExplorer",
-        "title": "Reveal in Explorer"
+        "title": "AudioLab: Reveal in Explorer"
       },
       {
         "command": "audio-lab.transcribeAudioFile",
-        "title": "Transcribe Audio From File Chooser"
+        "title": "AudioLab: Transcribe Audio From File Chooser"
       },
       {
         "command": "audio-lab.transcribeAudioItem",
-        "title": "Transcribe Audio"
+        "title": "AudioLab: Transcribe Audio"
       }
     ],
     "menus": {
@@ -80,6 +85,13 @@
           "command": "audio-lab.transcribeAudioItem",
           "when": "view == lemonadeStatus && viewItem == AUDIO_ITEM",
           "group": "1_modification"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "audio-lab.refreshServerStatus",
+          "when": "view == lemonadeStatus",
+          "group": "navigation"
         }
       ]
     },

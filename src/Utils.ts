@@ -1,13 +1,5 @@
 import * as vscode from 'vscode'
 
-export function detectWhisperModel(availableModels: any[]): string | null {
-  for (const model of availableModels) {
-    const id = (model.id || model.name || '').toLowerCase()
-    if (id.includes('whisper') || id.includes('transcri')) return model.id || model.name
-  }
-  return null
-}
-
 export function isValidUrl(url: string): boolean {
   try {
     new URL(url)
@@ -19,7 +11,7 @@ export function isValidUrl(url: string): boolean {
 
 export function isWhisperModel(model: any): boolean {
   const id = (model.id || model.name || '').toLowerCase()
-  return id.includes('whisper') || id.includes('transcri') || id.includes('audio')
+  return id.includes('whisper') || id.includes('audio')
 }
 
 export async function showTheTranscript(fileName: string, transcribedText: string) {
@@ -31,7 +23,5 @@ export async function showTheTranscript(fileName: string, transcribedText: strin
   const doc = await vscode.workspace.openTextDocument(uri)
   const editor = await vscode.window.showTextDocument(doc)
 
-  await editor.edit(editBuilder => {
-    editBuilder.insert(new vscode.Position(0, 0), transcribedText)
-  })
+  await editor.edit(editBuilder => editBuilder.insert(new vscode.Position(0, 0), transcribedText))
 }

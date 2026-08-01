@@ -1,8 +1,9 @@
 import * as vscode from 'vscode'
-import path from 'path'
 import fs from 'fs'
-import LemonadeTreeDataProvider from './Treeview'
+import path from 'path'
+
 import { showTheTranscript } from './Utils'
+import LemonadeTreeDataProvider from './Treeview'
 
 // Function to get Lemonade server status and available models
 export async function getLemonadeStatus(): Promise<any> {

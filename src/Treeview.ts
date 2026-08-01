@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import * as fs from 'fs'
 import * as path from 'path'
-import { getLemonadeStatus, transcribeAudio } from './Server'
+import { getLemonadeStatus } from './Server'
 import { TreeItem } from 'vscode'
 import { isValidUrl, isWhisperModel } from './Utils'
 
@@ -20,18 +20,23 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
     const config = vscode.workspace.getConfiguration('audio-lab')
     if (!config.get<string>('lemonadeServerUrl')) throw new Error('Lemonade server URL is not configured.')
 
-    this.currentServerUrl = config.get<string>('lemonadeServerUrl')!
-    this.isServerRunning = false
-    this.serverStatusData = null
-    this.availableModels = []
-    this.pickedModel = null
     this.getError = null
+    this.availableModels = []
+    this.isServerRunning = null
+    this.serverStatusData = null
+    this.currentServerUrl = config.get<string>('lemonadeServerUrl')!
+    this.pickedModel = config.get<string>('pickedModel') ? config.get<string>('pickedModel')! : null
   }
 
   async refreshStatus(): Promise<void> {
     this.getError = null
+    this.isServerRunning = null
+    this.serverStatusData = null
     this.currentServerUrl = vscode.workspace.getConfiguration('audio-lab').get<string>('lemonadeServerUrl')!
+    // Double check logic if the model got removed
     this.pickedModel = vscode.workspace.getConfiguration('audio-lab').get<string>('pickedModel')!
+    this._onDidChangeTreeData.fire() // For the effect
+
     if (!isValidUrl(this.currentServerUrl)) {
       this.isServerRunning = null
       this.availableModels = []
