@@ -89,6 +89,7 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
           // Red if stopped, gray if unknown, but error case is handled above, so this won't be shown
           : this.isServerRunning === false ? 'charts.red' : 'charts.gray'
         statusItem.iconPath = new vscode.ThemeIcon('debug-start', new vscode.ThemeColor(statusColor))
+        statusItem.contextValue = 'LEMONADE_SERVER_STATUS'
         items.push(statusItem as TreeItem)
 
         // Models section header

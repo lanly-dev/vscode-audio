@@ -24,3 +24,12 @@ export async function changeServerUrl(lemonadeProvider: LemonadeTreeDataProvider
   await lemonadeProvider.refreshStatus()
   vscode.window.showInformationMessage(`Server URL updated to: ${url}`)
 }
+
+export async function openServerUrl() {
+  const serverUrl = vscode.workspace.getConfiguration('audio-lab').get<string>('lemonadeServerUrl')
+  if (!serverUrl) {
+    vscode.window.showWarningMessage('No server URL configured.')
+    return
+  }
+  await vscode.env.openExternal(vscode.Uri.parse(serverUrl))
+}

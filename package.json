@@ -14,7 +14,7 @@
     "AI",
     "Other"
   ],
-    "keywords": [
+  "keywords": [
     "audio",
     "lemonade",
     "transcription",
@@ -55,6 +55,11 @@
         "title": "AudioLab: Open Audio File in Editor"
       },
       {
+        "command": "audio-lab.openServerUrl",
+        "title": "AudioLab: Open Server URL in Browser",
+        "icon": "$(browser)"
+      },
+      {
         "command": "audio-lab.pickModel",
         "title": "Pick This Model"
       },
@@ -87,6 +92,11 @@
         {
           "command": "audio-lab.changeServerUrl",
           "when": "view == lemonadeStatus && viewItem == LEMONADE_SERVER_URL",
+          "group": "inline"
+        },
+        {
+          "command": "audio-lab.openServerUrl",
+          "when": "view == lemonadeStatus && viewItem == LEMONADE_SERVER_STATUS",
           "group": "inline"
         },
         {
@@ -151,7 +161,7 @@
     "webpack": "^5.109.2",
     "webpack-cli": "^7.2.2"
   },
-    "repository": {
+  "repository": {
     "type": "git",
     "url": "git+https://github.com/lanly-dev/vscode-audio-lab.git"
   },
