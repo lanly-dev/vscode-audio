@@ -31,25 +31,20 @@ export async function pickModel(modelId: string, lemonadeProvider: LemonadeTreeD
   await lemonadeProvider.refreshStatus()
 }
 
-export async function transcribeAudio(context: vscode.ExtensionContext) {
-  let targetUri: vscode.Uri | undefined
+export async function transcribeAudio(fullPath?: string) {
+  const model = vscode.workspace.getConfiguration('audio-lab').get<string>('pickedModel')
+  if (!model) {
+    vscode.window.showWarningMessage('No model selected. Please pick a model first.')
+    return
+  }
 
-  // First, try to get selected file from the explorer context menu
-  const lastSelectedFile = context.workspaceState.get<vscode.Uri>('lastSelectedFile')
-  if (lastSelectedFile) targetUri = lastSelectedFile
-
-  // If no explorer selection, check active editor's document URI
-  if (!targetUri && vscode.window.activeTextEditor) targetUri = vscode.window.activeTextEditor.document.uri
-
-  // If still nothing, prompt user to pick a file from the explorer
+  let targetUri: vscode.Uri | undefined = fullPath ? vscode.Uri.file(fullPath) : undefined
   if (!targetUri) {
     const files = await vscode.window.showOpenDialog({
       canSelectFiles: true,
       canSelectFolders: false,
       canSelectMany: false,
-      filters: {
-        'Audio Files': ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma', 'webm']
-      }
+      filters: { 'Audio Files': ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma', 'webm'] }
     })
     if (files && files.length > 0) targetUri = files[0]
     else {
@@ -66,8 +61,7 @@ export async function transcribeAudio(context: vscode.ExtensionContext) {
   }
 
   const fileName = path.basename(targetUri.fsPath)
-  const serverUrl = 'http://localhost:13305'
-  const model = 'Whisper-Large-v3-Turbo'
+  const serverUrl = vscode.workspace.getConfiguration('audio-lab').get<string>('lemonadeServerUrl')
 
   try {
     vscode.window.showInformationMessage(`Transcribing ${fileName} using ${model}...`)
@@ -95,19 +89,16 @@ export async function transcribeAudio(context: vscode.ExtensionContext) {
     // Check if response includes text directly or if we need to poll for progress
     if (responseData && responseData.text) {
       // Direct text response - show immediately
-      const doc = await vscode.workspace.openTextDocument({
-        content: responseData.text
-      })
+      const doc = await vscode.workspace.openTextDocument({ content: responseData.text })
       await vscode.window.showTextDocument(doc)
 
       vscode.window.showInformationMessage(`Transcription complete for ${fileName}`)
       return
     }
 
-    // No direct text - poll for transcription progress via the status endpoint
-    const taskId = responseData?.task_id || responseData?.id || responseData?.taskId
     const statusUrl = responseData?.status_url || responseData?.return_url || '/api/transcribe-status'
 
+    // Double check this
     vscode.window.withProgress({
       location: vscode.ProgressLocation.Notification,
       title: `Transcribing ${fileName}...`,
@@ -176,11 +167,14 @@ export async function transcribeAudio(context: vscode.ExtensionContext) {
         }
       }
 
-      // Timeout
-      if (attempts >= maxAttempts) vscode.window.showWarningMessage(`Transcription still in progress. It may take a while for large files.`)
+      if (attempts >= maxAttempts) {
+        // Timeout
+        const msg = `Transcription still in progress for ${fileName}. It may take a while for large files.`
+        vscode.window.showWarningMessage(msg)
+      }
     })
   } catch (error) {
-    console.error('Transcription error:', error)
+    console.error('audio-lab: transcription error:', error)
     vscode.window.showErrorMessage(`Transcription failed: ${(error as Error).message}`)
   }
 }

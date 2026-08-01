@@ -85,8 +85,6 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
         statusItem.iconPath = new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor(statusColor))
         items.push(statusItem as TreeItem)
 
-
-
         // Models section header
         if (this.availableModels.length > 0) {
           const label = `Available Models (${this.availableModels.length})`
@@ -111,7 +109,8 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
         items.push(loadingItem as TreeItem)
       }
       return items
-    } else if (element.contextValue === 'MODELS_HEADER') return this.getModelChildren()
+    }
+    else if (element.contextValue === 'MODELS_HEADER') return this.getModelChildren()
     else if (element.contextValue === 'AUDIO_HEADER') return this.getDirHasAudioChildren()
     else if (element.contextValue === 'AUDIO_DIRECTORY') return this.getAudioFilesChildren(element)
     return []
@@ -171,7 +170,6 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
       const dirItem = new vscode.TreeItem(dir === '.' ? '(root)' : dir, vscode.TreeItemCollapsibleState.Collapsed)
       dirItem.iconPath = new vscode.ThemeIcon('folder')
       dirItem.contextValue = 'AUDIO_DIRECTORY'
-      // Store the full path in tooltip for later retrieval
       dirItem.tooltip = fullPath
       items.push(dirItem as TreeItem)
     }
@@ -237,14 +235,22 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
           const ext = entry.name.split('.').pop()?.toLowerCase() || ''
           if (!audioExtensions.includes(ext)) continue
 
+          const fullPath = path.join(dirPath, entry.name)
           const fileItem = new vscode.TreeItem(entry.name, vscode.TreeItemCollapsibleState.None)
           fileItem.iconPath = this.getAudioIcon(ext)
-          fileItem.contextValue = 'audio_file'
+          fileItem.contextValue = 'AUDIO_ITEM'
+          fileItem.tooltip = fullPath
           fileItem.command = {
             command: 'audio-lab.openAudioFile',
-            title: 'Open Audio File',
-            arguments: [path.join(dirPath, entry.name)]
+            title: 'Open Audio File in Editor',
+            arguments: [fullPath]
           }
+          const fileItemWithCommands = fileItem as vscode.TreeItem & { commands?: any[] }
+          fileItemWithCommands.commands = [
+            { command: 'audio-lab.openAudioFile', title: 'Open in Editor', arguments: [fullPath] },
+            { command: 'audio-lab.transcribeAudioItem', title: 'Transcribe', arguments: [fullPath] },
+            { command: 'audio-lab.revealInExplorer', title: 'Reveal in Explorer', arguments: [fullPath] }
+          ]
           items.push(fileItem as TreeItem)
         }
       }
@@ -252,18 +258,66 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
       console.error(`Audio-Lab: Failed to read directory: ${dirPath}`)
     }
 
-    if (items.length === 0) {
-      const noFilesItem = new vscode.TreeItem('No audio files', vscode.TreeItemCollapsibleState.None)
-      noFilesItem.iconPath = new vscode.ThemeIcon('info')
-      items.push(noFilesItem as TreeItem)
-    }
+    if (items.length === 0) return [new vscode.TreeItem('No audio files', vscode.TreeItemCollapsibleState.None) as TreeItem]
     return items
   }
 
-  async openAudioFile(fullPath: string): Promise<void> {
+  async openAudioItem(fullPath: string): Promise<void> {
     const uri = vscode.Uri.file(fullPath)
     const doc = await vscode.workspace.openTextDocument(uri)
     await vscode.window.showTextDocument(doc)
+  }
+
+  async transcribeAudioFile(fullPath: string): Promise<void> {
+    const config = vscode.workspace.getConfiguration('audio-lab')
+    const serverUrl = config.get<string>('lemonadeServerUrl')!
+
+    // Check if a whisper model is picked
+    const pickedModel = config.get<string>('pickedModel')
+    if (!pickedModel) {
+      vscode.window.showWarningMessage('Please select a Whisper model first from the Audio-Lab tree view.')
+      return
+    }
+
+    try {
+      const response = await fetch(`${serverUrl}/transcribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: pickedModel,
+          file: fullPath,
+          response_format: 'srt',
+          verbosn: true
+        })
+      })
+
+      if (!response.ok) throw new Error(`Transcription failed: ${response.statusText}`)
+
+      const data = await response.json()
+
+      // Show transcription result in output channel
+      const outputChannel = vscode.window.createOutputChannel('Audio-Lab: Transcription')
+      outputChannel.clear()
+
+      if (data.text) {
+        outputChannel.appendLine(`Transcription for: ${path.basename(fullPath)}`)
+        outputChannel.appendLine('='.repeat(50))
+        outputChannel.appendLine(data.text)
+      } else if (data.vodetranscriptions) {
+        outputChannel.appendLine(`Transcription for: ${path.basename(fullPath)}`)
+        outputChannel.appendLine('='.repeat(50))
+        for (const seg of data.vodetranscriptions) outputChannel.appendLine(`[${seg.start}s - ${seg.end}s]: ${seg.text}`)
+      } else outputChannel.appendLine(JSON.stringify(data, null, 2))
+
+      outputChannel.show()
+    } catch (error) {
+      vscode.window.showErrorMessage(`Transcription error: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
+  async revealInExplorer(fullPath: string): Promise<void> {
+    const uri = vscode.Uri.file(fullPath)
+    await vscode.commands.executeCommand('revealInExplorer', uri)
   }
 }
 

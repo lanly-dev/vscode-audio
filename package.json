@@ -39,8 +39,24 @@
         "icon": "$(edit)"
       },
       {
-        "command": "audio-lab.transcribeAudio",
-        "title": "Transcribe audio File"
+        "command": "audio-lab.openAudioFile",
+        "title": "Open Audio File in Editor"
+      },
+      {
+        "command": "audio-lab.pickModel",
+        "title": "Pick Whisper Model for Transcription"
+      },
+      {
+        "command": "audio-lab.revealInExplorer",
+        "title": "Reveal in Explorer"
+      },
+      {
+        "command": "audio-lab.transcribeAudioFile",
+        "title": "Transcribe Audio From File Chooser"
+      },
+      {
+        "command": "audio-lab.transcribeAudioItem",
+        "title": "Transcribe Audio"
       }
     ],
     "menus": {
@@ -49,6 +65,21 @@
           "command": "audio-lab.changeServerUrl",
           "when": "view == lemonadeStatus && viewItem == LEMONADE_SERVER_URL",
           "group": "inline"
+        },
+        {
+          "command": "audio-lab.pickModel",
+          "when": "view == lemonadeStatus && viewItem == WHISPER_AVAILABLE",
+          "group": "inline"
+        },
+        {
+          "command": "audio-lab.revealInExplorer",
+          "when": "view == lemonadeStatus && (viewItem == AUDIO_ITEM || viewItem == AUDIO_DIRECTORY)",
+          "group": "1_modification"
+        },
+        {
+          "command": "audio-lab.transcribeAudioItem",
+          "when": "view == lemonadeStatus && viewItem == AUDIO_ITEM",
+          "group": "1_modification"
         }
       ]
     },
