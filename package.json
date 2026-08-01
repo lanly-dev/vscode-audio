@@ -2,13 +2,25 @@
   "name": "audio-lab",
   "displayName": "Audio Lab",
   "description": "Transcribe audio files using Lemonade server with Whisper",
-  "version": "1.1.1",
+  "publisher": "lanly-dev",
+  "version": "0.0.1",
+  "sponsor": {
+    "url": "https://github.com/sponsors/lanly-dev"
+  },
   "engines": {
     "vscode": "^1.125.0"
   },
   "categories": [
+    "AI",
     "Other"
   ],
+    "keywords": [
+    "audio",
+    "lemonade",
+    "transcription",
+    "whisper"
+  ],
+  "icon": "media/audio-lab.png",
   "activationEvents": [
     "onStartupFinished"
   ],
@@ -19,7 +31,7 @@
         {
           "id": "audio-lab-activity-bar",
           "title": "AudioLab",
-          "icon": "$(mic)"
+          "icon": "media/audio-lab-icon.svg"
         }
       ]
     },
@@ -98,15 +110,15 @@
     "configuration": {
       "title": "Audio Lab",
       "properties": {
-        "audio-lab.lemonadeServerUrl": {
-          "type": "string",
-          "default": "http://localhost:13305",
-          "description": "Lemonade Server URL"
-        },
         "audio-lab.pickedModel": {
           "type": "string",
           "default": null,
           "description": "Currently picked model for transcription"
+        },
+        "audio-lab.lemonadeServerUrl": {
+          "type": "string",
+          "default": "http://localhost:13305",
+          "description": "Lemonade Server URL"
         }
       }
     }
@@ -133,10 +145,12 @@
     "webpack": "^5.109.2",
     "webpack-cli": "^7.2.2"
   },
-  "keywords": [
-    "audio",
-    "lemonade",
-    "transcription",
-    "whisper"
-  ]
+    "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lanly-dev/vscode-audio-lab.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lanly-dev/vscode-audio-lab/issues"
+  },
+  "license": "MIT"
 }
