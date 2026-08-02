@@ -9,7 +9,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Summary/describing the audio
 - Websocket log
 
-## [0.0.1]
+## [0.0.1] - 2026-08-01
 - Treeview showing Lemonade server status, list installed models, and audio files that are inside the workspace
 - Transcribe audio files
 - Initial release
