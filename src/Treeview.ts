@@ -2,7 +2,7 @@ import * as vscode from 'vscode'
 import * as fs from 'fs'
 import * as path from 'path'
 import { getLemonadeStatus } from './Server'
-import { TreeItem, workspace } from 'vscode'
+import { TreeItem } from 'vscode'
 import { isValidUrl, isWhisperModel } from './Utils'
 
 export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {

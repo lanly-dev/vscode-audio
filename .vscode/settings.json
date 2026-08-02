@@ -13,7 +13,8 @@
     "flac",
     "lanly",
     "subdirs",
-    "Treeview"
+    "Treeview",
+    "vsixmanifest"
   ],
   "editor.rulers": [120]
 }

@@ -1,5 +1,5 @@
 # Audio Lab Extension
-Transcribing audio files using the [Lemonade](https://lemonade-server.ai) server with Whisper models.
+Transform audio into text seamlessly with [Lemonade 🍋](https://lemonade-server.ai) and Whisper models, all within your VS Code IDE.
 <a href="https://marketplace.visualstudio.com/items?itemName=lanly-dev.audio-lab" target="_blank">
   <img src='https://code.visualstudio.com/favicon.ico' width='13'/>
 </a>
@@ -7,8 +7,16 @@ Transcribing audio files using the [Lemonade](https://lemonade-server.ai) server
   <img src='https://open-vsx.org/favicon.ico' width='12'/>
 </a>
 
-## Features
-> A way to transcribe you audio without leaving your IDE.
+## Intro
+Audio Lab seamlessly integrates powerful Whisper model capabilities into your development workflow. Transcribe audio files directly from VS Code, eliminating the need for context switching and streamlining your transcription process.
+
+<img src='https://github.com/lanly-dev/vscode-audio-lab/blob/main/media/screenshot.gif?raw=true'>
+
+## Key Features
+- **Seamless IDE Integration**: Transcribe audio without leaving your coding environment
+- **Lemonade Server Powered**: Leverages the cutting-edge Lemonade server for optimal performance
+- **Whisper Model Flexibility**: Choose from multiple Whisper models for different transcription needs
+- **Intuitive Tree View**: Navigate through audio files and server status with ease
 
 ## Quick Start
 
@@ -29,7 +37,7 @@ Click the **AudioLab** icon in the Activity Bar.
 ### 3. Select a Model
 - Expand the **Available Models** section
 - Click on any Whisper model (installed in Lemonade) to select it for transcription
-- Noted: Selected models appear with a green dot indicator
+- Note: Selected models appear with a green dot indicator
 
 ### 4. Transcribe an Audio File
 **From the tree view:**
@@ -72,10 +80,12 @@ AudioLab (Activity Bar)
 
 ## Requirements
 - Need Lemonade to be installed and running
+- Need to have Whisper models downloaded in Lemonade
 
 ## Release notes
 
-### 1.0.0
-Initial release of the extension
+### 0.0.1
+- Transcribe audio using Lemonade Server
+- Initial release of the extension
 
 **Enjoy!**

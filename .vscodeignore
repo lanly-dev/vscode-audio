@@ -1,7 +1,9 @@
 .gitignore
 .vscode/**
+**/*.map
 DEV.md
 eslint.config.mjs
+media/screenshot.gif
 node_modules/
 src/
 test/
