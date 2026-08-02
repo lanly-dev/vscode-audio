@@ -1,5 +1,5 @@
 # Audio Lab Extension
-Transform audio into text seamlessly with [Lemonade 🍋](https://lemonade-server.ai) and Whisper models, all within your VS Code IDE.
+Transform audio into text seamlessly with [Lemonade🍋](https://lemonade-server.ai) and Whisper models, all within your VS Code IDE.
 <a href="https://marketplace.visualstudio.com/items?itemName=lanly-dev.audio-lab" target="_blank">
   <img src='https://code.visualstudio.com/favicon.ico' width='13'/>
 </a>

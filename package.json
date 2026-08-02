@@ -86,6 +86,10 @@
         {
           "command": "audio-lab.pickModel",
           "when": "false"
+        },
+        {
+          "command": "audio-lab.transcribeAudioFile",
+          "when": "false"
         }
       ],
       "view/item/context": [

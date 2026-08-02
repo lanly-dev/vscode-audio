@@ -9,6 +9,7 @@
     "dist": true // set this to false to include "dist" folder in search results
   },
   "cSpell.words": [
+    "conviniences",
     "efix",
     "flac",
     "lanly",
@@ -16,5 +17,8 @@
     "Treeview",
     "vsixmanifest"
   ],
-  "editor.rulers": [120]
+  "editor.rulers": [
+    120
+  ],
+  "audio-lab.pickedModel": "Whisper-Large-v3"
 }
