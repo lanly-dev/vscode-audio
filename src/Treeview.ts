@@ -2,7 +2,7 @@ import * as vscode from 'vscode'
 import * as fs from 'fs'
 import * as path from 'path'
 import { getLemonadeStatus } from './Server'
-import { TreeItem } from 'vscode'
+import { TreeItem, workspace } from 'vscode'
 import { isValidUrl, isWhisperModel } from './Utils'
 
 export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
@@ -172,15 +172,19 @@ export default class LemonadeTreeDataProvider implements vscode.TreeDataProvider
 
     if (dirsWithAudio.size === 0) return [new vscode.TreeItem('No audio files found', vscode.TreeItemCollapsibleState.None) as TreeItem]
 
+    let rootDir: TreeItem | null = null
     for (const dir of dirsWithAudio) {
+      let item: TreeItem
+      const label = dir === '.' ? '(workspace)' : dir
+      item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.Collapsed)
       const fullPath = path.join(workspaceFolders[0].uri.fsPath, dir === '.' ? '' : dir)
-      const dirItem = new vscode.TreeItem(dir === '.' ? '(Workspace)' : dir, vscode.TreeItemCollapsibleState.Collapsed)
-      dirItem.iconPath = new vscode.ThemeIcon('folder')
-      dirItem.contextValue = 'AUDIO_DIRECTORY'
-      dirItem.tooltip = fullPath
-      items.push(dirItem as TreeItem)
+      item.iconPath = new vscode.ThemeIcon('folder')
+      item.contextValue = 'AUDIO_DIRECTORY'
+      item.tooltip = fullPath
+      if (dir === '.') rootDir = item
+      else items.push(item)
     }
-    return items
+    return rootDir ? [rootDir, ...items] : items
   }
 
   private collectDirsWithAudio(dirPath: string, audioExtensions: string[], result: Set<string>) {
